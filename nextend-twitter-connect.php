@@ -28,6 +28,8 @@ define( 'NEW_TWITTER_LOGIN', 1 );
 if ( ! defined( 'NEW_TWITTER_LOGIN_PLUGIN_BASENAME' ) )
 	define( 'NEW_TWITTER_LOGIN_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
   
+$new_twitter_settings = maybe_unserialize(get_option('nextend_twitter_connect'));
+
 /*
   Sessions required for the profile notices 
 */
@@ -53,8 +55,11 @@ function nextend_twitter_connect_stylesheet(){
   wp_enqueue_style( 'nextend_twitter_connect_stylesheet' );
 }
 
-add_action( 'wp_enqueue_scripts', 'nextend_twitter_connect_stylesheet' );
-
+if($new_twitter_settings['twitter_load_style']){
+  add_action( 'wp_enqueue_scripts', 'nextend_twitter_connect_stylesheet' );
+  add_action( 'login_enqueue_scripts', 'nextend_twitter_connect_stylesheet' );
+  add_action( 'admin_enqueue_scripts', 'nextend_twitter_connect_stylesheet' );
+}
 
 /*
   Creating the required table on installation
@@ -246,14 +251,10 @@ function new_add_twitter_connect_field() {
   <table class="form-table">
     <tbody>
       <tr>	
-        <th>
-          <label>Link Twitter with this profile</label>
-        </th>	
+        <th></th>	
         <td>
           <?php if(!new_twitter_is_user_connected()): ?>
-            <a href="<?php echo new_twitter_login_url().'&redirect='.site_url().$_SERVER["REQUEST_URI"]; ?>">Link Twitter with this profile</a>
-          <?php else: ?>
-          Already connected
+            <?php echo new_twitter_link_button() ?>
           <?php endif; ?>
         </td>
       </tr>
@@ -273,10 +274,9 @@ function new_add_twitter_login_form(){
       if(!has_social_form){
         has_social_form = true;
         var loginForm = $('#loginform');
-        socialLogins = $('<div class="newsociallogins"><div style="clear:both;"></div></div>');
+        socialLogins = $('<div class="newsociallogins" style="text-align: center;"><div style="clear:both;"></div></div>');
         loginForm.prepend("<h3 style='text-align:center;'>OR</h3>");
         loginForm.prepend(socialLogins);
-        console.log(socialLogins);
       }
       socialLogins.prepend('<?php echo addslashes(new_twitter_sign_button()); ?>');
     }(jQuery));
@@ -317,7 +317,13 @@ function new_twitter_plugin_action_links( $links, $file ) {
   Miscellaneous functions
 ----------------------------------------------------------------------------- */
 function new_twitter_sign_button(){
-  return '<a href="'.new_twitter_login_url().'">Sign in with Twitter</a><br />';
+  global $new_twitter_settings;
+  return '<a href="'.new_twitter_login_url().'">'.$new_twitter_settings['twitter_login_button'].'</a><br />';
+}
+
+function new_twitter_link_button(){
+  global $new_twitter_settings;
+  return '<a href="'.new_fb_login_url().'&redirect='.site_url().$_SERVER["REQUEST_URI"].'">'.$new_twitter_settings['twitter_link_button'].'</a><br />';
 }
 
 function new_twitter_login_url(){

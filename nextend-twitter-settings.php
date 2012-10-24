@@ -3,7 +3,7 @@
 Nextend Twitter Connect Settings Page
 */
 
-$newfb_status = "normal";
+$newtwitter_status = "normal";
 
 if(isset($_POST['newtwitter_update_options'])) {
 	if($_POST['newtwitter_update_options'] == 'Y') {
@@ -111,6 +111,31 @@ function NextendTwitter_Options_Page() {
 		<th scope="row"><?php _e('Twitter Consumer secret:', 'nextend-twitter-connect'); ?></th>
 		<td>
 		<input type="text" name="twitter_consumer_secret" value="<?php echo $nextend_twitter_connect['twitter_consumer_secret']; ?>" />
+		</td>
+		</tr>
+
+		<tr>
+		<th scope="row"><?php _e('Load button stylesheet:', 'nextend-twitter-connect'); ?></th>
+		<td>
+      <?php if(!isset($nextend_twitter_connect['twitter_load_style'])) $nextend_twitter_connect['twitter_load_style'] = 1; ?>
+		<input name="twitter_load_style" id="twitter_load_style_yes" value="1" type="radio" <?php if(isset($nextend_twitter_connect['twitter_load_style']) && $nextend_twitter_connect['twitter_load_style']){?> checked <?php } ?>> Yes  &nbsp;&nbsp;&nbsp;&nbsp;
+    <input name="twitter_load_style" id="twitter_load_style_no" value="0" type="radio" <?php if(isset($nextend_twitter_connect['twitter_load_style']) && $nextend_twitter_connect['twitter_load_style'] == 0){?> checked <?php } ?>> No		
+		</td>
+		</tr>
+    
+    <tr>
+		<th scope="row"><?php _e('Login button:', 'nextend-twitter-connect'); ?></th>
+		<td>
+      <?php if(!isset($nextend_twitter_connect['twitter_login_button'])) $nextend_twitter_connect['twitter_login_button'] = '<div class="new-twitter-btn new-twitter-1 new-twitter-default-anim"><div class="new-twitter-1-1"><div class="new-twitter-1-1-1">CONNECT WITH</div></div></div>'; ?>
+		  <textarea cols="83" rows="3" name="twitter_login_button"><?php echo $nextend_twitter_connect['twitter_login_button']; ?></textarea>
+		</td>
+		</tr>
+    
+    <tr>
+		<th scope="row"><?php _e('Link account button:', 'nextend-twitter-connect'); ?></th>
+		<td>
+      <?php if(!isset($nextend_twitter_connect['twitter_link_button'])) $nextend_twitter_connect['twitter_link_button'] = '<div class="new-twitter-btn new-twitter-1 new-twitter-default-anim"><div class="new-twitter-1-1"><div class="new-twitter-1-1-1">LINK ACCOUNT TO</div></div></div>'; ?>
+		  <textarea cols="83" rows="3" name="twitter_link_button"><?php echo $nextend_twitter_connect['twitter_link_button']; ?></textarea>
 		</td>
 		</tr>
 	</table>
