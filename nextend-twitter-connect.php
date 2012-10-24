@@ -46,6 +46,17 @@ add_action('wp_logout', 'new_twitter_end_session');
 add_action('wp_login', 'new_twitter_end_session');
 
 /*
+  Loading style for buttons
+*/
+function nextend_twitter_connect_stylesheet(){
+  wp_register_style( 'nextend_twitter_connect_stylesheet', plugins_url('buttons/twitter-btn.css', __FILE__) );
+  wp_enqueue_style( 'nextend_twitter_connect_stylesheet' );
+}
+
+add_action( 'wp_enqueue_scripts', 'nextend_twitter_connect_stylesheet' );
+
+
+/*
   Creating the required table on installation
 */
 function new_twitter_connect_install(){
@@ -77,6 +88,7 @@ add_filter('init', 'new_twitter_add_query_var');
 /* -----------------------------------------------------------------------------
   Main function to handle the Sign in/Register/Linking process
 ----------------------------------------------------------------------------- */
+add_action('parse_request', new_twitter_login);
 function new_twitter_login(){
   global $wp, $wpdb;
   if($wp->request == 'loginTwitter' || isset($wp->query_vars['loginTwitter'])){
@@ -205,10 +217,9 @@ function new_twitter_login(){
     exit;
   }
 }
-add_action('parse_request', new_twitter_login);
 
 /*
-  Is the current user connected the Twitter profile? 
+  Is the current user connected the Facebook profile? 
 */
 function new_twitter_is_user_connected(){
   global $wpdb;
@@ -252,6 +263,30 @@ function new_add_twitter_connect_field() {
 }
 add_action('profile_personal_options', 'new_add_twitter_connect_field');
 
+function new_add_twitter_login_form(){
+  ?>
+  <script>
+  var has_social_form = false;
+  var socialLogins = null;
+  jQuery(document).ready(function(){
+    (function($) {
+      if(!has_social_form){
+        has_social_form = true;
+        var loginForm = $('#loginform');
+        socialLogins = $('<div class="newsociallogins"><div style="clear:both;"></div></div>');
+        loginForm.prepend("<h3 style='text-align:center;'>OR</h3>");
+        loginForm.prepend(socialLogins);
+        console.log(socialLogins);
+      }
+      socialLogins.prepend('<?php echo addslashes(new_twitter_sign_button()); ?>');
+    }(jQuery));
+  });
+  </script>
+  <?php
+}
+
+add_action('login_form', 'new_add_twitter_login_form');
+
 /* 
   Options Page 
 */
@@ -281,6 +316,10 @@ function new_twitter_plugin_action_links( $links, $file ) {
 /* -----------------------------------------------------------------------------
   Miscellaneous functions
 ----------------------------------------------------------------------------- */
+function new_twitter_sign_button(){
+  return '<a href="'.new_twitter_login_url().'">Sign in with Twitter</a><br />';
+}
+
 function new_twitter_login_url(){
   return site_url('index.php').'?loginTwitter=1';
 }
