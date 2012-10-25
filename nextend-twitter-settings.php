@@ -115,6 +115,14 @@ function NextendTwitter_Options_Page() {
 		</tr>
 
 		<tr>
+		<th scope="row"><?php _e('New user prefix:', 'nextend-twitter-connect'); ?></th>
+		<td>
+    <?php if(!isset($nextend_twitter_connect['twitter_user_prefix'])) $nextend_twitter_connect['twitter_user_prefix'] = 'twitter - '; ?>
+		<input type="text" name="twitter_user_prefix" value="<?php echo $nextend_twitter_connect['twitter_user_prefix']; ?>" />
+		</td>
+		</tr>
+
+		<tr>
 		<th scope="row"><?php _e('Load button stylesheet:', 'nextend-twitter-connect'); ?></th>
 		<td>
       <?php if(!isset($nextend_twitter_connect['twitter_load_style'])) $nextend_twitter_connect['twitter_load_style'] = 1; ?>

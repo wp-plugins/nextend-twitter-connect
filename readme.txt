@@ -3,13 +3,17 @@ Contributors: nextendweb
 Tags: twitter, register, login, social connect, social, twitter connect
 Requires at least: 3.0
 Tested up to: 3.4
-Stable tag: 1.0
+Stable tag: 1.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
 One click registration & login plugin for Twitter? Easy installation? Is it totally free and comes with support? Yeah!
 
 == Description ==
+
+Check the [DEMO](http://www.nextendweb.com/wp-login.php) on our site.
+
+Also we created a [Social Connect button generator](http://www.nextendweb.com/social-connect-button-generator) which work with this plugin fine. This allows you to create fancy login buttons. 
 
 Personally, I hate to fill out registration forms, waiting for confirmation e-mails, so we designed this plugin for our website. Now, we want to share this very usable plugin with everyone, for free!
  
@@ -44,5 +48,11 @@ Don’t forget to follow us on Facebook and Twitter!
 5.  Accept the rules and Click on Create your twitter application
 6.  The next page contains the Consumer key and Consumer secret which you have to copy and past below.
 7.  Save changes!
+
+== Screenshots ==
+
+1. Our Social Connect plugins on the main WP login page
+2. Our Social Connect plugins in the profile page for account linking
+
 
 == Changelog ==

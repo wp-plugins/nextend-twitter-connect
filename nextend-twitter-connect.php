@@ -3,7 +3,7 @@
 Plugin Name: Nextend Twitter Connect
 Plugin URI: http://nextendweb.com/
 Description: Twitter connect
-Version: 1.0
+Version: 1.1
 Author: Roland Soos
 License: GPL2
 */
@@ -109,13 +109,22 @@ function new_twitter_login(){
         $ID = $wpdb->get_var($wpdb->prepare('
           SELECT ID FROM '.$wpdb->prefix.'social_users WHERE type = "twitter" AND identifier = "'.$resp->id.'"
         '));
+        if(!get_user_by('id',$ID)){
+          $wpdb->query($wpdb->prepare('
+            DELETE FROM '.$wpdb->prefix.'social_users WHERE ID = "'.$ID.'"
+          '));
+          $ID = null;
+        }
         if(!is_user_logged_in()){
           if($ID == NULL){ // Register
             $email = $resp->id.'@noemail.twitter.com';
             $ID = email_exists($email);
             if($ID == false){ // Real register
               $random_password = wp_generate_password( $length=12, $include_standard_special_chars=false );
-              $ID = wp_create_user( 'Twitter - '.$resp->name, $random_password, $email );
+              $settings = maybe_unserialize(get_option('nextend_twitter_connect'));
+                
+              if(!isset($settings['twitter_user_prefix'])) $settings['twitter_user_prefix'] = 'Twitter - ';
+              $ID = wp_create_user( $settings['twitter_user_prefix'].$resp->name, $random_password, $email );
             }
             $wpdb->insert( 
             	$wpdb->prefix.'social_users', 
@@ -133,6 +142,7 @@ function new_twitter_login(){
           }
           if($ID){ // Login
             wp_set_auth_cookie($ID, true, false);
+            do_action('wp_login', $settings['twitter_user_prefix'].$resp->name);
             header( 'Location: '.(isset($_SESSION['redirect']) ? $_SESSION['redirect'] : $_GET['redirect']) );
             unset($_SESSION['redirect']);
             exit;
