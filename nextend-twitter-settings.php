@@ -74,8 +74,11 @@ function NextendTwitter_Options_Page() {
 	<div id="newtwitter-about" class="postbox">
 	<h3 class="hndle"><?php _e('About this plugin', 'nextend-twitter-connect'); ?></h3>
 	<div class="inside"><ul>
-	<li><a href="http://wordpress.org/extend/plugins/nextend-twitter-connect/"><?php _e('Plugin URI', 'nextend-twitter-connect'); ?></a></li>
-	<li><a href="http://profiles.wordpress.org/nextendweb" target="_blank"><?php _e('Author URI', 'nextend-twitter-connect'); ?></a></li>
+  <li><a href="http://www.nextendweb.com/social-connect-plugins-for-wordpress.html" target="_blank"><?php _e('Check the realted <b>blog post</b>!', 'nextend-google-connect'); ?></a></li>
+  <li><br></li>
+	<li><a href="http://wordpress.org/extend/plugins/nextend-twitter-connect/"><?php _e('Nextend Twitter Connect', 'nextend-twitter-connect'); ?></a></li>
+  <li><br></li>
+	<li><a href="http://profiles.wordpress.org/nextendweb" target="_blank"><?php _e('Nextend  plugins at WordPress.org', 'nextend-twitter-connect'); ?></a></li>
 	</ul></div>
 	</div>
 	<!--about end-->
@@ -145,6 +148,13 @@ function NextendTwitter_Options_Page() {
       <?php if(!isset($nextend_twitter_connect['twitter_link_button'])) $nextend_twitter_connect['twitter_link_button'] = '<div class="new-twitter-btn new-twitter-1 new-twitter-default-anim"><div class="new-twitter-1-1"><div class="new-twitter-1-1-1">LINK ACCOUNT TO</div></div></div>'; ?>
 		  <textarea cols="83" rows="3" name="twitter_link_button"><?php echo $nextend_twitter_connect['twitter_link_button']; ?></textarea>
 		</td>
+		</tr>
+    
+    <tr>
+		<th scope="row"></th>
+		<td>
+    <a href="http://www.nextendweb.com/social-connect-button-generator" target="_blank"><img style="margin-left: -4px;" src="<?php echo plugins_url('generatorbanner.png', __FILE__); ?>" /></a>
+    </td>
 		</tr>
 	</table>
 
