@@ -27,7 +27,7 @@ Personally, I hate to fill out registration forms, waiting for confirmation e-ma
 * Fast and helpful support.
 * Totally free.
 
-If you like our stuff donate a like to our [Facebook page](https://www.facebook.com/nextendweb) or follow us on [Twitter](https://www.facebook.com/nextendweb) 
+If you like our stuff donate a like to our [Facebook page](https://www.facebook.com/nextendweb) or follow us on [Twitter](https://twitter.com/nextendweb)!
 
 #### Usage
 
