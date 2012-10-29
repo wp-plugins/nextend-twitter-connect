@@ -7,6 +7,9 @@ $newtwitter_status = "normal";
 
 if(isset($_POST['newtwitter_update_options'])) {
 	if($_POST['newtwitter_update_options'] == 'Y') {
+    foreach($_POST AS $k => $v){
+      $_POST[$k] = stripslashes($v);
+    }
 		update_option("nextend_twitter_connect", maybe_serialize($_POST));
 		$newtwitter_status = 'update_success';
 	}
