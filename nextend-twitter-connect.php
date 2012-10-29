@@ -3,7 +3,7 @@
 Plugin Name: Nextend Twitter Connect
 Plugin URI: http://nextendweb.com/
 Description: Twitter connect
-Version: 1.2.1
+Version: 1.4.4
 Author: Roland Soos
 License: GPL2
 */
@@ -95,7 +95,7 @@ add_filter('init', 'new_twitter_add_query_var');
 ----------------------------------------------------------------------------- */
 add_action('parse_request', new_twitter_login);
 function new_twitter_login(){
-  global $wp, $wpdb;
+  global $wp, $wpdb,$new_twitter_settings;
   if($wp->request == 'loginTwitter' || isset($wp->query_vars['loginTwitter'])){
     require(dirname(__FILE__).'/sdk/init.php');
     $here = new_twitter_login_url();
@@ -121,7 +121,7 @@ function new_twitter_login(){
             $ID = email_exists($email);
             if($ID == false){ // Real register
               $random_password = wp_generate_password( $length=12, $include_standard_special_chars=false );
-              $settings = maybe_unserialize(get_option('nextend_twitter_connect'));
+              $settings = $new_twitter_settings;
                 
               if(!isset($settings['twitter_user_prefix'])) $settings['twitter_user_prefix'] = 'Twitter - ';
               $ID = wp_create_user( $settings['twitter_user_prefix'].$resp->name, $random_password, $email );
@@ -203,6 +203,9 @@ function new_twitter_login(){
       }
     // start the OAuth dance
     } else {
+      if(isset($new_twitter_settings['twitter_redirect']) && $new_twitter_settings['twitter_redirect'] != '' && $new_twitter_settings['twitter_redirect'] != 'auto'){
+        $_GET['redirect'] = $new_twitter_settings['twitter_redirect'];
+      }
       $_SESSION['redirect'] = isset($_GET['redirect']) ? $_GET['redirect'] : site_url();
       
       $callback = $here;
@@ -328,7 +331,7 @@ function new_twitter_plugin_action_links( $links, $file ) {
 ----------------------------------------------------------------------------- */
 function new_twitter_sign_button(){
   global $new_twitter_settings;
-  return '<a href="'.new_twitter_login_url().'">'.$new_twitter_settings['twitter_login_button'].'</a><br />';
+  return '<a href="'.new_twitter_login_url().(isset($_GET['redirect_to']) ? '&redirect='.$_GET['redirect_to'] : '').'" rel="nofollow".'">'.$new_twitter_settings['twitter_login_button'].'</a><br />';
 }
 
 function new_twitter_link_button(){
