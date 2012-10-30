@@ -3,7 +3,7 @@
 Plugin Name: Nextend Twitter Connect
 Plugin URI: http://nextendweb.com/
 Description: Twitter connect
-Version: 1.4.7
+Version: 1.4.8
 Author: Roland Soos
 License: GPL2
 */
@@ -120,11 +120,17 @@ function new_twitter_login(){
             $email = $resp->id.'@noemail.twitter.com';
             $ID = email_exists($email);
             if($ID == false){ // Real register
+              require_once( ABSPATH . WPINC . '/registration.php');
               $random_password = wp_generate_password( $length=12, $include_standard_special_chars=false );
               $settings = $new_twitter_settings;
                 
               if(!isset($settings['twitter_user_prefix'])) $settings['twitter_user_prefix'] = 'Twitter - ';
-              $ID = wp_create_user( $settings['twitter_user_prefix'].$resp->name, $random_password, $email );
+              $ID = wp_create_user( $settings['twitter_user_prefix'].$resp->screen_name, $random_password, $email );
+              wp_update_user(array(
+                'ID' => $ID, 
+                'display_name' => $resp->name, 
+                'twitter' => $resp->screen_name
+              ));
             }
             $wpdb->insert( 
             	$wpdb->prefix.'social_users', 
@@ -142,7 +148,7 @@ function new_twitter_login(){
           }
           if($ID){ // Login
             wp_set_auth_cookie($ID, true, false);
-            do_action('wp_login', $settings['twitter_user_prefix'].$resp->name);
+            do_action('wp_login', $settings['twitter_user_prefix'].$resp->screen_name);
             header( 'Location: '.(isset($_SESSION['redirect']) ? $_SESSION['redirect'] : $_GET['redirect']) );
             unset($_SESSION['redirect']);
             exit;
