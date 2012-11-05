@@ -58,10 +58,10 @@ function NextendTwitter_Options_Page() {
   </p>
   <h3><?php _e('Usage', 'nextend-twitter-connect'); ?></h3>
   <h4><?php _e('Simple link', 'nextend-twitter-connect'); ?></h4>
-	<p><?php _e('&lt;a href="'.get_option('siteurl').'?logintwitter=1&redirect='.get_option('siteurl').'" onclick="window.location = \''.get_option('siteurl').'?logintwitter=1&redirect=\'+window.location.href; return false;"&gt;Click here to login or register with twitter&lt;/a&gt;', 'nextend-twitter-connect'); ?></p>
+	<p><?php _e('&lt;a href="'.get_option('siteurl').'?loginTwitter=1&redirect='.get_option('siteurl').'" onclick="window.location = \''.get_option('siteurl').'?loginTwitter=1&redirect=\'+window.location.href; return false;"&gt;Click here to login or register with twitter&lt;/a&gt;', 'nextend-twitter-connect'); ?></p>
 	
   <h4><?php _e('Image button', 'nextend-twitter-connect'); ?></h4>
-	<p><?php _e('&lt;a href="'.get_option('siteurl').'?logintwitter=1&redirect='.get_option('siteurl').'" onclick="window.location = \''.get_option('siteurl').'?logintwitter=1&redirect=\'+window.location.href; return false;"&gt; &lt;img src="HereComeTheImage" /&gt; &lt;/a&gt;', 'nextend-twitter-connect'); ?></p>
+	<p><?php _e('&lt;a href="'.get_option('siteurl').'?loginTwitter=1&redirect='.get_option('siteurl').'" onclick="window.location = \''.get_option('siteurl').'?loginTwitter=1&redirect=\'+window.location.href; return false;"&gt; &lt;img src="HereComeTheImage" /&gt; &lt;/a&gt;', 'nextend-twitter-connect'); ?></p>
   
   <h3><?php _e('Note', 'nextend-twitter-connect'); ?></h3>
   <p><?php _e('If the twitter user\'s email address already used by another member of your site, the twitter profile will be automatically linked to the existing profile!', 'nextend-twitter-connect'); ?></p>
