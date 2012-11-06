@@ -3,7 +3,7 @@
 Plugin Name: Nextend Twitter Connect
 Plugin URI: http://nextendweb.com/
 Description: Twitter connect
-Version: 1.4.11
+Version: 1.4.12
 Author: Roland Soos
 License: GPL2
 */
@@ -34,13 +34,13 @@ $new_twitter_settings = maybe_unserialize(get_option('nextend_twitter_connect'))
   Sessions required for the profile notices 
 */
 function new_twitter_start_session() {
-  if(!session_id()) {
-      session_start();
-  }
+  if(!session_id())
+    session_start();
 }
 
 function new_twitter_end_session() {
-  session_destroy ();
+  if(session_id())
+    session_destroy();
 }
 
 add_action('init', 'new_twitter_start_session', 1);
