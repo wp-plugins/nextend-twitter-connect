@@ -129,7 +129,15 @@ function NextendTwitter_Options_Page() {
 		</tr>
 
 		<tr>
-		<th scope="row"><?php _e('Fixed redirect url:', 'nextend-twitter-connect'); ?></th>
+		<th scope="row"><?php _e('New user prefix:', 'nextend-twitter-connect'); ?></th>
+		<td>
+    <?php if(!isset($nextend_twitter_connect['twitter_user_prefix'])) $nextend_twitter_connect['twitter_user_prefix'] = 'Facebook - '; ?>
+		<input type="text" name="twitter_user_prefix" value="<?php echo $nextend_twitter_connect['twitter_user_prefix']; ?>" />
+		</td>
+		</tr>
+
+		<tr>
+		<th scope="row"><?php _e('Fixed redirect url for login:', 'nextend-twitter-connect'); ?></th>
 		<td>
     <?php if(!isset($nextend_twitter_connect['twitter_redirect'])) $nextend_twitter_connect['twitter_redirect'] = 'auto'; ?>
 		<input type="text" name="twitter_redirect" value="<?php echo $nextend_twitter_connect['twitter_redirect']; ?>" />

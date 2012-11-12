@@ -3,7 +3,7 @@
 Plugin Name: Nextend Twitter Connect
 Plugin URI: http://nextendweb.com/
 Description: Twitter connect
-Version: 1.4.14
+Version: 1.4.15
 Author: Roland Soos
 License: GPL2
 */
@@ -123,10 +123,9 @@ function new_twitter_login(){
             if($ID == false){ // Real register
               require_once( ABSPATH . WPINC . '/registration.php');
               $random_password = wp_generate_password( $length=12, $include_standard_special_chars=false );
-              $settings = $new_twitter_settings;
                 
-              if(!isset($settings['twitter_user_prefix'])) $settings['twitter_user_prefix'] = 'Twitter - ';
-              $ID = wp_create_user( $settings['twitter_user_prefix'].$resp->screen_name, $random_password, $email );
+              if(!isset($new_twitter_settings['twitter_user_prefix'])) $new_twitter_settings['twitter_user_prefix'] = 'Twitter - ';
+              $ID = wp_create_user( $new_twitter_settings['twitter_user_prefix'].$resp->screen_name, $random_password, $email );
               wp_update_user(array(
                 'ID' => $ID, 
                 'display_name' => $resp->name, 
@@ -146,6 +145,9 @@ function new_twitter_login(){
                 '%s'
             	)
             );
+            if(isset($new_twitter_settings['twitter_redirect_reg']) && $new_twitter_settings['twitter_redirect_reg'] != '' && $new_twitter_settings['twitter_redirect_reg'] != 'auto'){
+              $_SESSION['redirect'] = $new_twitter_settings['twitter_redirect_reg'];
+            }
           }
           if($ID){ // Login
             wp_set_auth_cookie($ID, true, false);
