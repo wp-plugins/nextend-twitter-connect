@@ -3,7 +3,7 @@
 Plugin Name: Nextend Twitter Connect
 Plugin URI: http://nextendweb.com/
 Description: Twitter connect
-Version: 1.4.13
+Version: 1.4.14
 Author: Roland Soos
 License: GPL2
 */
@@ -363,6 +363,12 @@ function new_twitter_edit_profile_redirect(){
   }
 }
 add_action('parse_request', new_twitter_edit_profile_redirect);
+
+function new_twitter_jquery(){
+  wp_enqueue_script( 'jquery' );
+}
+
+add_action('login_form_login', 'new_twitter_jquery');
 
 
 /*
