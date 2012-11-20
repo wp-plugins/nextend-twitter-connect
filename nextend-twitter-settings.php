@@ -145,6 +145,14 @@ function NextendTwitter_Options_Page() {
 		</tr>
 
 		<tr>
+		<th scope="row"><?php _e('Fixed redirect url for register:', 'nextend-twitter-connect'); ?></th>
+		<td>
+    <?php if(!isset($nextend_twitter_connect['twitter_redirect_reg'])) $nextend_twitter_connect['twitter_redirect_reg'] = 'auto'; ?>
+		<input type="text" name="twitter_redirect_reg" value="<?php echo $nextend_twitter_connect['twitter_redirect_reg']; ?>" />
+		</td>
+		</tr>
+
+		<tr>
 		<th scope="row"><?php _e('Load button stylesheet:', 'nextend-twitter-connect'); ?></th>
 		<td>
       <?php if(!isset($nextend_twitter_connect['twitter_load_style'])) $nextend_twitter_connect['twitter_load_style'] = 1; ?>
