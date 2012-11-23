@@ -3,7 +3,7 @@
 Plugin Name: Nextend Twitter Connect
 Plugin URI: http://nextendweb.com/
 Description: Twitter connect
-Version: 1.4.18
+Version: 1.4.21
 Author: Roland Soos
 License: GPL2
 */
@@ -108,12 +108,12 @@ function new_twitter_login(){
       if ($code == 200) {
         $resp = json_decode($tmhOAuth->response['response']);
         $ID = $wpdb->get_var($wpdb->prepare('
-          SELECT ID FROM '.$wpdb->prefix.'social_users WHERE type = "twitter" AND identifier = "'.$resp->id.'"
-        '));
+          SELECT ID FROM '.$wpdb->prefix.'social_users WHERE type = "twitter" AND identifier = "%d"
+        ',$resp->id));
         if(!get_user_by('id',$ID)){
           $wpdb->query($wpdb->prepare('
-            DELETE FROM '.$wpdb->prefix.'social_users WHERE ID = "'.$ID.'"
-          '));
+            DELETE FROM '.$wpdb->prefix.'social_users WHERE ID = "%d"
+          ', $ID));
           $ID = null;
         }
         if(!is_user_logged_in()){
@@ -253,8 +253,8 @@ function new_twitter_is_user_connected(){
   global $wpdb;
   $current_user = wp_get_current_user();
   $ID = $wpdb->get_var($wpdb->prepare('
-    SELECT ID FROM '.$wpdb->prefix.'social_users WHERE type = "twitter" AND ID = "'.$current_user->ID.'"
-  '));
+    SELECT ID FROM '.$wpdb->prefix.'social_users WHERE type = "twitter" AND ID = "%d"
+  ',$current_user->ID));
   if($ID === NULL) return false;
   return true;
 }
