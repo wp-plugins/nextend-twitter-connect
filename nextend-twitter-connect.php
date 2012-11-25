@@ -3,7 +3,7 @@
 Plugin Name: Nextend Twitter Connect
 Plugin URI: http://nextendweb.com/
 Description: Twitter connect
-Version: 1.4.21
+Version: 1.4.23
 Author: Roland Soos
 License: GPL2
 */
@@ -231,7 +231,8 @@ function new_twitter_login(){
     
       if ($code == 200) {
         $_SESSION['oauth'] = $tmhOAuth->extract_params($tmhOAuth->response['response']);
-        $method = isset($_REQUEST['authenticate']) ? 'authenticate' : 'authorize';
+        //$method = isset($_REQUEST['authenticate']) ? 'authenticate' : 'authorize';
+        $method = 'authenticate';
         $force = isset($_REQUEST['force']) ? '&force_login=1' : '';
         $authurl = $tmhOAuth->url("oauth/{$method}", '') . "?oauth_token={$_SESSION['oauth']['oauth_token']}{$force}";
         header('Location: '.$authurl);

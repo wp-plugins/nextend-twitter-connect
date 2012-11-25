@@ -65,6 +65,9 @@ After you activated the plugin, the plugin will autmatically
 
 == Changelog ==
 
+= 1.4.23 =
+* Now the application will only request authorization for the register.
+
 = 1.4.21 =
 * Bugfix for Wordpress 3.5RC1
 
