@@ -66,7 +66,7 @@ After you activated the plugin, the plugin will autmatically
 == Changelog ==
 
 = 1.4.24 =
-* new_twitter_is_user_connected() function now returns with the Google id if authenticated, null if not...
+* new_twitter_is_user_connected() function now returns with the Twitter id if authenticated, null if not...
 
 = 1.4.23 =
 * Now the application will only request authorization for the register.
