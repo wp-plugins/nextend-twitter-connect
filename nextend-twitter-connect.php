@@ -3,7 +3,7 @@
 Plugin Name: Nextend Twitter Connect
 Plugin URI: http://nextendweb.com/
 Description: Twitter connect
-Version: 1.4.23
+Version: 1.4.24
 Author: Roland Soos
 License: GPL2
 */
@@ -126,25 +126,29 @@ function new_twitter_login(){
                 
               if(!isset($new_twitter_settings['twitter_user_prefix'])) $new_twitter_settings['twitter_user_prefix'] = 'Twitter - ';
               $ID = wp_create_user( $new_twitter_settings['twitter_user_prefix'].$resp->screen_name, $random_password, $email );
-              wp_update_user(array(
-                'ID' => $ID, 
-                'display_name' => $resp->name, 
-                'twitter' => $resp->screen_name
-              ));
+              if($ID){
+                wp_update_user(array(
+                  'ID' => $ID, 
+                  'display_name' => $resp->name, 
+                  'twitter' => $resp->screen_name
+                ));
+              }
             }
-            $wpdb->insert( 
-            	$wpdb->prefix.'social_users', 
-            	array( 
-            		'ID' => $ID, 
-            		'type' => 'twitter',
-                'identifier' => $resp->id
-            	), 
-            	array( 
-            		'%d', 
-            		'%s',
-                '%s'
-            	)
-            );
+            if($ID){
+              $wpdb->insert( 
+              	$wpdb->prefix.'social_users', 
+              	array( 
+              		'ID' => $ID, 
+              		'type' => 'twitter',
+                  'identifier' => $resp->id
+              	), 
+              	array( 
+              		'%d', 
+              		'%s',
+                  '%s'
+              	)
+              );
+            }
             if(isset($new_twitter_settings['twitter_redirect_reg']) && $new_twitter_settings['twitter_redirect_reg'] != '' && $new_twitter_settings['twitter_redirect_reg'] != 'auto'){
               $_SESSION['redirect'] = $new_twitter_settings['twitter_redirect_reg'];
             }
@@ -254,10 +258,10 @@ function new_twitter_is_user_connected(){
   global $wpdb;
   $current_user = wp_get_current_user();
   $ID = $wpdb->get_var($wpdb->prepare('
-    SELECT ID FROM '.$wpdb->prefix.'social_users WHERE type = "twitter" AND ID = "%d"
+    SELECT identifier FROM '.$wpdb->prefix.'social_users WHERE type = "twitter" AND ID = "%d"
   ',$current_user->ID));
   if($ID === NULL) return false;
-  return true;
+  return $ID;
 }
 
 /*
