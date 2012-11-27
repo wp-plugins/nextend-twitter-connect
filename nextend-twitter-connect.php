@@ -3,7 +3,7 @@
 Plugin Name: Nextend Twitter Connect
 Plugin URI: http://nextendweb.com/
 Description: Twitter connect
-Version: 1.4.26
+Version: 1.4.27
 Author: Roland Soos
 License: GPL2
 */
@@ -125,8 +125,19 @@ function new_twitter_login(){
               $random_password = wp_generate_password( $length=12, $include_standard_special_chars=false );
                 
               if(!isset($new_twitter_settings['twitter_user_prefix'])) $new_twitter_settings['twitter_user_prefix'] = 'Twitter - ';
-              $ID = wp_create_user( $new_twitter_settings['twitter_user_prefix'].$resp->screen_name, $random_password, $email );
-              if($ID){
+              $sanitized_user_login = sanitize_user($new_twitter_settings['twitter_user_prefix'].$resp->screen_name);
+              if(!validate_username($sanitized_user_login)){
+                $sanitized_user_login = sanitize_user('twitter'.$user_profile['id']);
+              }
+              $defaul_user_name = $sanitized_user_login;
+              $i = 1;
+              while(username_exists($sanitized_user_login)){
+                $sanitized_user_login = $defaul_user_name.$i;
+                $i++;
+              }
+              
+              $ID = wp_create_user($sanitized_user_login, $random_password, $email);
+              if(!is_wp_error($ID)){
                 wp_new_user_notification($ID, $random_password);
                 wp_update_user(array(
                   'ID' => $ID, 
@@ -134,6 +145,8 @@ function new_twitter_login(){
                   'twitter' => $resp->screen_name
                 ));
                 update_user_meta( $ID, 'twitter_profile_picture', 'https://api.twitter.com/1/users/profile_image?user_id='.$resp->id.'&size=bigger');
+              }else{
+                return;
               }
             }
             if($ID){
