@@ -3,7 +3,7 @@
 Plugin Name: Nextend Twitter Connect
 Plugin URI: http://nextendweb.com/
 Description: Twitter connect
-Version: 1.4.25
+Version: 1.4.26
 Author: Roland Soos
 License: GPL2
 */
@@ -127,11 +127,13 @@ function new_twitter_login(){
               if(!isset($new_twitter_settings['twitter_user_prefix'])) $new_twitter_settings['twitter_user_prefix'] = 'Twitter - ';
               $ID = wp_create_user( $new_twitter_settings['twitter_user_prefix'].$resp->screen_name, $random_password, $email );
               if($ID){
+                wp_new_user_notification($ID, $random_password);
                 wp_update_user(array(
                   'ID' => $ID, 
                   'display_name' => $resp->name, 
                   'twitter' => $resp->screen_name
                 ));
+                update_user_meta( $ID, 'twitter_profile_picture', 'https://api.twitter.com/1/users/profile_image?user_id='.$resp->id.'&size=bigger');
               }
             }
             if($ID){
@@ -315,6 +317,25 @@ function new_add_twitter_login_form(){
 
 add_action('login_form', 'new_add_twitter_login_form');
 add_action('register_form', 'new_add_twitter_login_form');
+
+add_filter( 'get_avatar', 'new_twitter_insert_avatar', 1, 5 );
+function new_twitter_insert_avatar( $avatar = '', $id_or_email, $size = 96, $default = '', $alt = false ) {
+  $id = 0;	
+  if(is_numeric($id_or_email)){
+    $id = $id_or_email;
+  }else if(is_string($id_or_email)){
+    $u = get_user_by('email',$id_or_email);
+    $id = $u->id;
+  }else if(is_object($id_or_email)){
+    $id = $id_or_email->user_id;
+  }
+  if($id == 0) return $avatar;
+
+  $pic = get_user_meta($id, 'twitter_profile_picture', true);
+  if(!$pic || $pic == '') return $avatar;
+  $avatar = preg_replace('/src=("|\').*?("|\')/i', 'src="'.$pic.'"', $avatar);
+  return $avatar;
+}
 
 /* 
   Options Page 
