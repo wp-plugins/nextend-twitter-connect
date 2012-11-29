@@ -3,7 +3,7 @@
 Plugin Name: Nextend Twitter Connect
 Plugin URI: http://nextendweb.com/
 Description: Twitter connect
-Version: 1.4.27
+Version: 1.4.28
 Author: Roland Soos
 License: GPL2
 */
@@ -171,7 +171,7 @@ function new_twitter_login(){
           if($ID){ // Login
             wp_set_auth_cookie($ID, true, false);
             $user_info = get_userdata($ID);
-            do_action('wp_login', $user_info->user_login. $user_info);
+            do_action('wp_login', $user_info->user_login, $user_info);
             header( 'Location: '.(isset($_SESSION['redirect']) ? $_SESSION['redirect'] : $_GET['redirect']) );
             unset($_SESSION['redirect']);
             exit;
