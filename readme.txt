@@ -4,7 +4,7 @@ Tags: twitter, register, login, social connect, social, twitter connect
 Donate link: https://www.facebook.com/nextendweb
 Requires at least: 3.0
 Tested up to: 3.4
-Stable tag: 1.4.28
+Stable tag: 1.4.31
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -41,18 +41,18 @@ After you activated the plugin, the plugin will autmatically
 
 **Simple link**
 
-&lt;a href="*siteurl*?loginTwitter=1&redirect=*siteurl*" onclick="window.location = \'*siteurl*?loginTwitter=1&redirect=\'+window.location.href; return false;"&gt;Click here to login or register with Twitter&lt;/a&gt;
+&lt;a href="*siteurl*/wp-login.php?loginTwitter=1&redirect=*siteurl*" onclick="window.location = \'*siteurl*/wp-login.php?loginTwitter=1&redirect=\'+window.location.href; return false;"&gt;Click here to login or register with Twitter&lt;/a&gt;
 
 **Image button**
 
-&lt;a href="*siteurl*?loginTwitter=1&redirect=*siteurl*" onclick="window.location = \'*siteurl*?loginTwitter=1&redirect=\'+window.location.href; return false;"&gt; &lt;img src="HereComeTheImage" /&gt; &lt;/a&gt;
+&lt;a href="*siteurl*/wp-login.php?loginTwitter=1&redirect=*siteurl*" onclick="window.location = \'*siteurl*/wp-login.php?loginTwitter=1&redirect=\'+window.location.href; return false;"&gt; &lt;img src="HereComeTheImage" /&gt; &lt;/a&gt;
 
 == Installation ==
 
 1.  Extract the zip file and just drop the contents in the wp-content/plugins/ directory of your WordPress installation and then activate the Plugin from Plugins page.
 2.  Create a Twitter app => https://dev.twitter.com/apps/new
 3.  Choose an App Name, it can be anything you like. Fill out the description and your website home page with site_url
-4.  Callback url must be: siteurl/index.php?loginTwitter=1
+4.  Callback url must be: siteurl/wp-login.php?loginTwitter=1
 5.  Accept the rules and Click on Create your twitter application
 6.  The next page contains the Consumer key and Consumer secret which you have to copy and past below.
 7.  Save changes!
@@ -64,6 +64,10 @@ After you activated the plugin, the plugin will autmatically
 
 
 == Changelog ==
+
+= 1.4.31 =
+* Callback url changed! if you used older version please repeat installation step #4  
+* Official SSL support added - Thanks for Chin for the help
 
 = 1.4.28 =
 * Typo fix

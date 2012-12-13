@@ -3,7 +3,7 @@
 Plugin Name: Nextend Twitter Connect
 Plugin URI: http://nextendweb.com/
 Description: Twitter connect
-Version: 1.4.28
+Version: 1.4.31
 Author: Roland Soos
 License: GPL2
 */
@@ -94,100 +94,86 @@ add_filter('init', 'new_twitter_add_query_var');
 /* -----------------------------------------------------------------------------
   Main function to handle the Sign in/Register/Linking process
 ----------------------------------------------------------------------------- */
-add_action('parse_request', new_twitter_login);
+
+/*
+  Compatibility for older versions
+*/
+add_action('parse_request', new_twitter_login_compat);
+function new_twitter_login_compat(){
+  global $wp;
+  if($wp->request == 'loginTwitter' || isset($wp->query_vars['loginTwitter']) ){
+    new_twitter_login_action();
+  }
+}
+
+/*
+  For login page
+*/
+add_action('login_init', new_twitter_login);
 function new_twitter_login(){
+  if($_REQUEST['loginTwitter'] == '1'){
+    new_twitter_login_action();
+  }
+}
+
+function new_twitter_login_action(){
   global $wp, $wpdb,$new_twitter_settings;
-  if($wp->request == 'loginTwitter' || isset($wp->query_vars['loginTwitter'])){
-    require(dirname(__FILE__).'/sdk/init.php');
-    $here = new_twitter_login_url();
-    if ( isset($_SESSION['access_token']) ) {
-      $tmhOAuth->config['user_token'] = $_SESSION['access_token']['oauth_token'];
-      $tmhOAuth->config['user_secret'] = $_SESSION['access_token']['oauth_token_secret'];
-    
-      $code = $tmhOAuth->request('GET', $tmhOAuth->url('1/account/verify_credentials'));
-      if ($code == 200) {
-        $resp = json_decode($tmhOAuth->response['response']);
-        $ID = $wpdb->get_var($wpdb->prepare('
-          SELECT ID FROM '.$wpdb->prefix.'social_users WHERE type = "twitter" AND identifier = "%d"
-        ',$resp->id));
-        if(!get_user_by('id',$ID)){
-          $wpdb->query($wpdb->prepare('
-            DELETE FROM '.$wpdb->prefix.'social_users WHERE ID = "%d"
-          ', $ID));
-          $ID = null;
-        }
-        if(!is_user_logged_in()){
-          if($ID == NULL){ // Register
-            $email = $resp->id.'@noemail.twitter.com';
-            $ID = email_exists($email);
-            if($ID == false){ // Real register
-              require_once( ABSPATH . WPINC . '/registration.php');
-              $random_password = wp_generate_password( $length=12, $include_standard_special_chars=false );
-                
-              if(!isset($new_twitter_settings['twitter_user_prefix'])) $new_twitter_settings['twitter_user_prefix'] = 'Twitter - ';
-              $sanitized_user_login = sanitize_user($new_twitter_settings['twitter_user_prefix'].$resp->screen_name);
-              if(!validate_username($sanitized_user_login)){
-                $sanitized_user_login = sanitize_user('twitter'.$user_profile['id']);
-              }
-              $defaul_user_name = $sanitized_user_login;
-              $i = 1;
-              while(username_exists($sanitized_user_login)){
-                $sanitized_user_login = $defaul_user_name.$i;
-                $i++;
-              }
+  require(dirname(__FILE__).'/sdk/init.php');
+  $here = new_twitter_login_url();
+  if ( isset($_SESSION['access_token']) ) {
+    $tmhOAuth->config['user_token'] = $_SESSION['access_token']['oauth_token'];
+    $tmhOAuth->config['user_secret'] = $_SESSION['access_token']['oauth_token_secret'];
+  
+    $code = $tmhOAuth->request('GET', $tmhOAuth->url('1/account/verify_credentials'));
+    if ($code == 200) {
+      $resp = json_decode($tmhOAuth->response['response']);
+      $ID = $wpdb->get_var($wpdb->prepare('
+        SELECT ID FROM '.$wpdb->prefix.'social_users WHERE type = "twitter" AND identifier = "%d"
+      ',$resp->id));
+      if(!get_user_by('id',$ID)){
+        $wpdb->query($wpdb->prepare('
+          DELETE FROM '.$wpdb->prefix.'social_users WHERE ID = "%d"
+        ', $ID));
+        $ID = null;
+      }
+      if(!is_user_logged_in()){
+        if($ID == NULL){ // Register
+          $email = $resp->id.'@noemail.twitter.com';
+          $ID = email_exists($email);
+          if($ID == false){ // Real register
+            require_once( ABSPATH . WPINC . '/registration.php');
+            $random_password = wp_generate_password( $length=12, $include_standard_special_chars=false );
               
-              $ID = wp_create_user($sanitized_user_login, $random_password, $email);
-              if(!is_wp_error($ID)){
-                wp_new_user_notification($ID, $random_password);
-                wp_update_user(array(
-                  'ID' => $ID, 
-                  'display_name' => $resp->name, 
-                  'twitter' => $resp->screen_name
-                ));
-                update_user_meta( $ID, 'twitter_profile_picture', 'https://api.twitter.com/1/users/profile_image?user_id='.$resp->id.'&size=bigger');
-              }else{
-                return;
-              }
+            if(!isset($new_twitter_settings['twitter_user_prefix'])) $new_twitter_settings['twitter_user_prefix'] = 'Twitter - ';
+            $sanitized_user_login = sanitize_user($new_twitter_settings['twitter_user_prefix'].$resp->screen_name);
+            if(!validate_username($sanitized_user_login)){
+              $sanitized_user_login = sanitize_user('twitter'.$user_profile['id']);
             }
-            if($ID){
-              $wpdb->insert( 
-              	$wpdb->prefix.'social_users', 
-              	array( 
-              		'ID' => $ID, 
-              		'type' => 'twitter',
-                  'identifier' => $resp->id
-              	), 
-              	array( 
-              		'%d', 
-              		'%s',
-                  '%s'
-              	)
-              );
+            $defaul_user_name = $sanitized_user_login;
+            $i = 1;
+            while(username_exists($sanitized_user_login)){
+              $sanitized_user_login = $defaul_user_name.$i;
+              $i++;
             }
-            if(isset($new_twitter_settings['twitter_redirect_reg']) && $new_twitter_settings['twitter_redirect_reg'] != '' && $new_twitter_settings['twitter_redirect_reg'] != 'auto'){
-              $_SESSION['redirect'] = $new_twitter_settings['twitter_redirect_reg'];
+            
+            $ID = wp_create_user($sanitized_user_login, $random_password, $email);
+            if(!is_wp_error($ID)){
+              wp_new_user_notification($ID, $random_password);
+              wp_update_user(array(
+                'ID' => $ID, 
+                'display_name' => $resp->name, 
+                'twitter' => $resp->screen_name
+              ));
+              update_user_meta( $ID, 'twitter_profile_picture', 'https://api.twitter.com/1/users/profile_image?user_id='.$resp->id.'&size=bigger');
+            }else{
+              return;
             }
           }
-          if($ID){ // Login
-            wp_set_auth_cookie($ID, true, false);
-            $user_info = get_userdata($ID);
-            do_action('wp_login', $user_info->user_login, $user_info);
-            header( 'Location: '.(isset($_SESSION['redirect']) ? $_SESSION['redirect'] : $_GET['redirect']) );
-            unset($_SESSION['redirect']);
-            exit;
-          }
-          exit;
-        }else{
-          $current_user = wp_get_current_user();
-          if($current_user->ID == $ID){ // It was a simple login
-            header( 'Location: '.$_SESSION['redirect'] );
-            unset($_SESSION['redirect']);
-            exit;
-          }elseif($ID === NULL){  // Let's connect the accout to the current user!
+          if($ID){
             $wpdb->insert( 
             	$wpdb->prefix.'social_users', 
             	array( 
-            		'ID' => $current_user->ID, 
+            		'ID' => $ID, 
             		'type' => 'twitter',
                 'identifier' => $resp->id
             	), 
@@ -195,74 +181,111 @@ function new_twitter_login(){
             		'%d', 
             		'%s',
                 '%s'
-            	) 
+            	)
             );
-            $_SESSION['new_twitter_admin_notice'] = __('Your Twitter profile is successfully linked with your account. Now you can sign in with Twitter easily.', 'nextend-twitter-connect');
-            header( 'Location: '.(isset($_SESSION['redirect']) ? $_SESSION['redirect'] : $_GET['redirect']) );
-            unset($_SESSION['redirect']);
-            exit;
-          }else{
-            $_SESSION['new_twitter_admin_notice'] = __('This Twitter profile is already linked with other account. Linking process failed!', 'nextend-twitter-connect');
-            header( 'Location: '.(isset($_SESSION['redirect']) ? $_SESSION['redirect'] : $_GET['redirect']) );
-            unset($_SESSION['redirect']);
-            exit;
+          }
+          if(isset($new_twitter_settings['twitter_redirect_reg']) && $new_twitter_settings['twitter_redirect_reg'] != '' && $new_twitter_settings['twitter_redirect_reg'] != 'auto'){
+            $_SESSION['redirect'] = $new_twitter_settings['twitter_redirect_reg'];
           }
         }
-      } else {
-        //print_r($tmhOAuth);
-        echo "Twitter Error 3";
+        if($ID){ // Login
+          $secure_cookie = is_ssl();
+          $secure_cookie = apply_filters('secure_signon_cookie', $secure_cookie, array());
+          global $auth_secure_cookie; // XXX ugly hack to pass this to wp_authenticate_cookie
+          $auth_secure_cookie = $secure_cookie;
+          
+          wp_set_auth_cookie($ID, true, $secure_cookie);
+          $user_info = get_userdata($ID);
+          do_action('wp_login', $user_info->user_login, $user_info);
+          header( 'Location: '.(isset($_SESSION['redirect']) ? $_SESSION['redirect'] : $_GET['redirect']) );
+          unset($_SESSION['redirect']);
+          exit;
+        }
         exit;
+      }else{
+        $current_user = wp_get_current_user();
+        if($current_user->ID == $ID){ // It was a simple login
+          header( 'Location: '.$_SESSION['redirect'] );
+          unset($_SESSION['redirect']);
+          exit;
+        }elseif($ID === NULL){  // Let's connect the accout to the current user!
+          $wpdb->insert( 
+          	$wpdb->prefix.'social_users', 
+          	array( 
+          		'ID' => $current_user->ID, 
+          		'type' => 'twitter',
+              'identifier' => $resp->id
+          	), 
+          	array( 
+          		'%d', 
+          		'%s',
+              '%s'
+          	) 
+          );
+          $_SESSION['new_twitter_admin_notice'] = __('Your Twitter profile is successfully linked with your account. Now you can sign in with Twitter easily.', 'nextend-twitter-connect');
+          header( 'Location: '.(isset($_SESSION['redirect']) ? $_SESSION['redirect'] : $_GET['redirect']) );
+          unset($_SESSION['redirect']);
+          exit;
+        }else{
+          $_SESSION['new_twitter_admin_notice'] = __('This Twitter profile is already linked with other account. Linking process failed!', 'nextend-twitter-connect');
+          header( 'Location: '.(isset($_SESSION['redirect']) ? $_SESSION['redirect'] : $_GET['redirect']) );
+          unset($_SESSION['redirect']);
+          exit;
+        }
       }
-    // we're being called back by Twitter
-    } elseif (isset($_REQUEST['oauth_verifier'])) {
-      $tmhOAuth->config['user_token'] = $_SESSION['oauth']['oauth_token'];
-      $tmhOAuth->config['user_secret'] = $_SESSION['oauth']['oauth_token_secret'];
-    
-      $code = $tmhOAuth->request('POST', $tmhOAuth->url('oauth/access_token', ''), array(
-        'oauth_verifier' => $_REQUEST['oauth_verifier']
-      ));
-    
-      if ($code == 200) {
-        $_SESSION['access_token'] = $tmhOAuth->extract_params($tmhOAuth->response['response']);
-        unset($_SESSION['oauth']);
-        header("Location: {$here}");
-      } else {
-        echo "Twitter Error 2";
-        exit;
-      }
-    // start the OAuth dance
     } else {
-      if(isset($new_twitter_settings['twitter_redirect']) && $new_twitter_settings['twitter_redirect'] != '' && $new_twitter_settings['twitter_redirect'] != 'auto'){
-        $_GET['redirect'] = $new_twitter_settings['twitter_redirect'];
-      }
-      $_SESSION['redirect'] = isset($_GET['redirect']) ? $_GET['redirect'] : site_url();
-      
-      $callback = $here;
-      $params = array(
-        'oauth_callback' => $callback
-      );
-    
-      if (isset($_REQUEST['force_read'])) :
-        $params['x_auth_access_type'] = 'read';
-      endif;
-    
-      $code = $tmhOAuth->request('POST', $tmhOAuth->url('oauth/request_token', ''), $params);
-    
-      if ($code == 200) {
-        $_SESSION['oauth'] = $tmhOAuth->extract_params($tmhOAuth->response['response']);
-        //$method = isset($_REQUEST['authenticate']) ? 'authenticate' : 'authorize';
-        $method = 'authenticate';
-        $force = isset($_REQUEST['force']) ? '&force_login=1' : '';
-        $authurl = $tmhOAuth->url("oauth/{$method}", '') . "?oauth_token={$_SESSION['oauth']['oauth_token']}{$force}";
-        header('Location: '.$authurl);
-        exit;
-      } else {
-        //print_r($tmhOAuth);
-        echo "Twitter Error 1";
-        exit;
-      }
+      //print_r($tmhOAuth);
+      echo "Twitter Error 3";
+      exit;
     }
-    exit;
+  // we're being called back by Twitter
+  } elseif (isset($_REQUEST['oauth_verifier'])) {
+    $tmhOAuth->config['user_token'] = $_SESSION['oauth']['oauth_token'];
+    $tmhOAuth->config['user_secret'] = $_SESSION['oauth']['oauth_token_secret'];
+  
+    $code = $tmhOAuth->request('POST', $tmhOAuth->url('oauth/access_token', ''), array(
+      'oauth_verifier' => $_REQUEST['oauth_verifier']
+    ));
+  
+    if ($code == 200) {
+      $_SESSION['access_token'] = $tmhOAuth->extract_params($tmhOAuth->response['response']);
+      unset($_SESSION['oauth']);
+      header("Location: {$here}");
+    } else {
+      echo "Twitter Error 2";
+      exit;
+    }
+  // start the OAuth dance
+  } else {
+    if(isset($new_twitter_settings['twitter_redirect']) && $new_twitter_settings['twitter_redirect'] != '' && $new_twitter_settings['twitter_redirect'] != 'auto'){
+      $_GET['redirect'] = $new_twitter_settings['twitter_redirect'];
+    }
+    $_SESSION['redirect'] = isset($_GET['redirect']) ? $_GET['redirect'] : site_url();
+    
+    $callback = $here;
+    $params = array(
+      'oauth_callback' => $callback
+    );
+  
+    if (isset($_REQUEST['force_read'])) :
+      $params['x_auth_access_type'] = 'read';
+    endif;
+  
+    $code = $tmhOAuth->request('POST', $tmhOAuth->url('oauth/request_token', ''), $params);
+  
+    if ($code == 200) {
+      $_SESSION['oauth'] = $tmhOAuth->extract_params($tmhOAuth->response['response']);
+      //$method = isset($_REQUEST['authenticate']) ? 'authenticate' : 'authorize';
+      $method = 'authenticate';
+      $force = isset($_REQUEST['force']) ? '&force_login=1' : '';
+      $authurl = $tmhOAuth->url("oauth/{$method}", '') . "?oauth_token={$_SESSION['oauth']['oauth_token']}{$force}";
+      header('Location: '.$authurl);
+      exit;
+    } else {
+      //print_r($tmhOAuth);
+      echo "Twitter Error 1";
+      exit;
+    }
   }
 }
 
@@ -284,6 +307,8 @@ function new_twitter_is_user_connected(){
 */
 function new_add_twitter_connect_field() {
   global $new_is_social_header;
+  if(new_twitter_is_user_connected()) return;
+  
   if($new_is_social_header === NULL){
     ?>
     <h3>Social connect</h3>
@@ -296,9 +321,7 @@ function new_add_twitter_connect_field() {
       <tr>	
         <th></th>	
         <td>
-          <?php if(!new_twitter_is_user_connected()): ?>
-            <?php echo new_twitter_link_button() ?>
-          <?php endif; ?>
+          <?php echo new_twitter_link_button() ?>
         </td>
       </tr>
     </tbody>
@@ -390,7 +413,7 @@ function new_twitter_link_button(){
 }
 
 function new_twitter_login_url(){
-  return site_url('index.php').'?loginTwitter=1';
+  return site_url('wp-login.php').'?loginTwitter=1';
 }
 
 function new_twitter_edit_profile_redirect(){
