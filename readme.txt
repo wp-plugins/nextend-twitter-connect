@@ -4,7 +4,7 @@ Tags: twitter, register, login, social connect, social, twitter connect
 Donate link: https://www.facebook.com/nextendweb
 Requires at least: 3.0
 Tested up to: 3.4
-Stable tag: 1.4.32
+Stable tag: 1.4.35
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -64,6 +64,9 @@ After you activated the plugin, the plugin will autmatically
 
 
 == Changelog ==
+
+= 1.4.35 =
+* Javascript login fix for "SimpleModal Login"
 
 = 1.4.32 =
 * Double login button fix
