@@ -3,7 +3,7 @@
 Plugin Name: Nextend Twitter Connect
 Plugin URI: http://nextendweb.com/
 Description: Twitter connect
-Version: 1.4.35
+Version: 1.4.36
 Author: Roland Soos
 License: GPL2
 */
@@ -98,7 +98,7 @@ add_filter('init', 'new_twitter_add_query_var');
 /*
   Compatibility for older versions
 */
-add_action('parse_request', new_twitter_login_compat);
+add_action('parse_request', 'new_twitter_login_compat');
 function new_twitter_login_compat(){
   global $wp;
   if($wp->request == 'loginTwitter' || isset($wp->query_vars['loginTwitter']) ){
@@ -109,7 +109,7 @@ function new_twitter_login_compat(){
 /*
   For login page
 */
-add_action('login_init', new_twitter_login);
+add_action('login_init', 'new_twitter_login');
 function new_twitter_login(){
   if($_REQUEST['loginTwitter'] == '1'){
     new_twitter_login_action();
@@ -414,7 +414,7 @@ function new_twitter_sign_button(){
 
 function new_twitter_link_button(){
   global $new_twitter_settings;
-  return '<a href="'.new_twitter_login_url().'&redirect='.site_url().$_SERVER["REQUEST_URI"].'">'.$new_twitter_settings['twitter_link_button'].'</a><br />';
+  return '<a href="'.new_twitter_login_url().'&redirect='.site_url().$GLOBALS['HTTP_SERVER_VARS']['REQUEST_URI'].'">'.$new_twitter_settings['twitter_link_button'].'</a><br />';
 }
 
 function new_twitter_login_url(){
@@ -432,7 +432,7 @@ function new_twitter_edit_profile_redirect(){
     exit;
   }
 }
-add_action('parse_request', new_twitter_edit_profile_redirect);
+add_action('parse_request', 'new_twitter_edit_profile_redirect');
 
 function new_twitter_jquery(){
   wp_enqueue_script( 'jquery' );
