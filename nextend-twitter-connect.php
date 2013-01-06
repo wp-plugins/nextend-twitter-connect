@@ -3,7 +3,7 @@
 Plugin Name: Nextend Twitter Connect
 Plugin URI: http://nextendweb.com/
 Description: Twitter connect
-Version: 1.4.38
+Version: 1.4.39
 Author: Roland Soos
 License: GPL2
 */
@@ -138,8 +138,7 @@ function new_twitter_login_action(){
       }
       if(!is_user_logged_in()){
         if($ID == NULL){ // Register
-          $email = $resp->id.'@noemail.twitter.com';
-          $ID = email_exists($email);
+          $email = new_twitter_request_email();
           if($ID == false){ // Real register
             require_once( ABSPATH . WPINC . '/registration.php');
             $random_password = wp_generate_password( $length=12, $include_standard_special_chars=false );
@@ -287,6 +286,42 @@ function new_twitter_login_action(){
       exit;
     }
   }
+}
+
+/*
+This function request valid email from Twitter users
+*/
+
+function new_twitter_request_email(){
+	$user_email = $_POST['user_email'];
+	$errors = new WP_Error();
+	if ( $user_email == '' ) {
+		$errors->add( 'empty_email', __( '<strong>ERROR</strong>: Please type your e-mail address.' ) );
+	} elseif ( ! is_email( $user_email ) ) {
+		$errors->add( 'invalid_email', __( '<strong>ERROR</strong>: The email address isn&#8217;t correct.' ) );
+		$user_email = '';
+	} elseif ( email_exists( $user_email ) ) {
+		$errors->add( 'email_exists', __( '<strong>ERROR</strong>: This email is already registered, please choose another one.' ) );
+	}
+  
+  if($errors->get_error_code() == ''){
+    return $user_email;
+  }
+  
+  login_header(__('Registration Form'), '<p class="message register">' . __('Register For This Site') . '</p>', $errors);
+  ?>
+  <form name="registerform" id="registerform" action="<?php echo esc_url( site_url('wp-login.php?loginTwitter=1', 'login_post') ); ?>" method="post">
+  	<p>
+  		<label for="user_email"><?php _e('E-mail') ?><br />
+  		<input type="email" name="user_email" id="user_email" class="input" value="<?php echo esc_attr(stripslashes($user_email)); ?>" size="25" tabindex="20" /></label>
+  	</p>
+  	<p id="reg_passmail"><?php _e('A password will be e-mailed to you.') ?></p>
+  	<br class="clear" />
+  	<p class="submit"><input type="submit" name="wp-submit" id="wp-submit" class="button-primary" value="<?php esc_attr_e('Register'); ?>" tabindex="100" /></p>
+  </form>
+  <?php
+  login_footer('user_login');
+  exit;
 }
 
 /*
