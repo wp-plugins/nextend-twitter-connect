@@ -3,7 +3,7 @@
 Plugin Name: Nextend Twitter Connect
 Plugin URI: http://nextendweb.com/
 Description: Twitter connect
-Version: 1.4.39
+Version: 1.4.40
 Author: Roland Soos
 License: GPL2
 */
@@ -125,6 +125,11 @@ function new_twitter_login_action(){
     $tmhOAuth->config['user_secret'] = $_SESSION['access_token']['oauth_token_secret'];
   
     $code = $tmhOAuth->request('GET', $tmhOAuth->url('1/account/verify_credentials'));
+    
+    if($code == 401){
+      $code = tmhUtilities::auto_fix_time_request($tmhOAuth, 'GET', $tmhOAuth->url('1/account/verify_credentials'));
+    }
+    
     if ($code == 200) {
       $resp = json_decode($tmhOAuth->response['response']);
       $ID = $wpdb->get_var($wpdb->prepare('
@@ -164,6 +169,7 @@ function new_twitter_login_action(){
                 'twitter' => $resp->screen_name
               ));
               update_user_meta( $ID, 'twitter_profile_picture', 'https://api.twitter.com/1/users/profile_image?user_id='.$resp->id.'&size=bigger');
+              do_action('nextend_twitter_user_registered', $resp, $tmhOAuth);
             }else{
               return;
             }
@@ -196,12 +202,18 @@ function new_twitter_login_action(){
           wp_set_auth_cookie($ID, true, $secure_cookie);
           $user_info = get_userdata($ID);
           do_action('wp_login', $user_info->user_login, $user_info);
+          do_action('nextend_twitter_user_logged_in', $resp, $tmhOAuth);
+          
+          if($_SESSION['redirect'] == '' || $_SESSION['redirect'] == new_twitter_login_url())
+            $_SESSION['redirect'] = site_url();
           header( 'Location: '.(isset($_SESSION['redirect']) ? $_SESSION['redirect'] : $_GET['redirect']) );
           unset($_SESSION['redirect']);
           exit;
         }
         exit;
       }else{
+        if($_SESSION['redirect'] == '' || $_SESSION['redirect'] == new_twitter_login_url())
+          $_SESSION['redirect'] = site_url();
         $current_user = wp_get_current_user();
         if($current_user->ID == $ID){ // It was a simple login
           header( 'Location: '.$_SESSION['redirect'] );
@@ -221,6 +233,7 @@ function new_twitter_login_action(){
               '%s'
           	) 
           );
+          do_action('nextend_twitter_user_account_linked', $resp, $tmhOAuth);
           $_SESSION['new_twitter_admin_notice'] = __('Your Twitter profile is successfully linked with your account. Now you can sign in with Twitter easily.', 'nextend-twitter-connect');
           header( 'Location: '.(isset($_SESSION['redirect']) ? $_SESSION['redirect'] : $_GET['redirect']) );
           unset($_SESSION['redirect']);
@@ -242,9 +255,15 @@ function new_twitter_login_action(){
     $tmhOAuth->config['user_token'] = $_SESSION['oauth']['oauth_token'];
     $tmhOAuth->config['user_secret'] = $_SESSION['oauth']['oauth_token_secret'];
   
-    $code = $tmhOAuth->request('POST', $tmhOAuth->url('oauth/access_token', ''), array(
+    $params = array(
       'oauth_verifier' => $_REQUEST['oauth_verifier']
-    ));
+    );
+    
+    $code = $tmhOAuth->request('POST', $tmhOAuth->url('oauth/access_token', ''), $params);
+    
+    if($code == 401){
+      $code = tmhUtilities::auto_fix_time_request($tmhOAuth, 'POST', $tmhOAuth->url('oauth/access_token', ''), $params);
+    }
   
     if ($code == 200) {
       $_SESSION['access_token'] = $tmhOAuth->extract_params($tmhOAuth->response['response']);
@@ -271,10 +290,13 @@ function new_twitter_login_action(){
     endif;
   
     $code = $tmhOAuth->request('POST', $tmhOAuth->url('oauth/request_token', ''), $params);
+    
+    if($code == 401){
+      $code = tmhUtilities::auto_fix_time_request($tmhOAuth, 'POST', $tmhOAuth->url('oauth/request_token', ''), $params);
+    }
   
     if ($code == 200) {
       $_SESSION['oauth'] = $tmhOAuth->extract_params($tmhOAuth->response['response']);
-      //$method = isset($_REQUEST['authenticate']) ? 'authenticate' : 'authorize';
       $method = 'authenticate';
       $force = isset($_REQUEST['force']) ? '&force_login=1' : '';
       $authurl = $tmhOAuth->url("oauth/{$method}", '') . "?oauth_token={$_SESSION['oauth']['oauth_token']}{$force}";
