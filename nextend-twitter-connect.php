@@ -3,7 +3,7 @@
 Plugin Name: Nextend Twitter Connect
 Plugin URI: http://nextendweb.com/
 Description: Twitter connect
-Version: 1.4.40
+Version: 1.4.41
 Author: Roland Soos
 License: GPL2
 */
@@ -472,11 +472,23 @@ function new_twitter_sign_button(){
 
 function new_twitter_link_button(){
   global $new_twitter_settings;
-  return '<a href="'.new_twitter_login_url().'&redirect='.site_url().$GLOBALS['HTTP_SERVER_VARS']['REQUEST_URI'].'">'.$new_twitter_settings['twitter_link_button'].'</a><br />';
+  return '<a href="'.new_twitter_login_url().'&redirect='.new_twitter_curPageURL().'">'.$new_twitter_settings['twitter_link_button'].'</a><br />';
 }
 
 function new_twitter_login_url(){
   return site_url('wp-login.php').'?loginTwitter=1';
+}
+
+function new_twitter_curPageURL() {
+  $pageURL = 'http';
+  if (isset($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] == "on") {$pageURL .= "s";}
+  $pageURL .= "://";
+  if ($_SERVER["SERVER_PORT"] != "80") {
+    $pageURL .= $_SERVER["SERVER_NAME"].":".$_SERVER["SERVER_PORT"].$_SERVER["REQUEST_URI"];
+  } else {
+    $pageURL .= $_SERVER["SERVER_NAME"].$_SERVER["REQUEST_URI"];
+  }
+  return $pageURL;
 }
 
 function new_twitter_edit_profile_redirect(){
