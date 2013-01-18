@@ -170,6 +170,14 @@ function NextendTwitter_Options_Page() {
 		</tr>
     
     <tr>
+		<th scope="row"><?php _e('Unlink account button:', 'nextend-twitter-connect'); ?></th>
+		<td>
+      <?php if(!isset($nextend_twitter_connect['twitter_unlink_button'])) $nextend_twitter_connect['twitter_unlink_button'] = '<div class="new-twitter-btn new-twitter-1 new-twitter-default-anim"><div class="new-twitter-1-1"><div class="new-twitter-1-1-1">UNLINK ACCOUNT</div></div></div>'; ?>
+		  <textarea cols="83" rows="3" name="twitter_unlink_button"><?php echo $nextend_twitter_connect['twitter_unlink_button']; ?></textarea>
+		</td>
+		</tr>
+    
+    <tr>
 		<th scope="row"></th>
 		<td>
     <a href="http://www.nextendweb.com/social-connect-button-generator" target="_blank"><img style="margin-left: -4px;" src="<?php echo plugins_url('generatorbanner.png', __FILE__); ?>" /></a>

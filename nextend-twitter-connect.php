@@ -3,7 +3,7 @@
 Plugin Name: Nextend Twitter Connect
 Plugin URI: http://nextendweb.com/
 Description: Twitter connect
-Version: 1.4.42
+Version: 1.4.43
 Author: Roland Soos
 License: GPL2
 */
@@ -34,8 +34,11 @@ $new_twitter_settings = maybe_unserialize(get_option('nextend_twitter_connect'))
   Sessions required for the profile notices 
 */
 function new_twitter_start_session() {
-  if(!session_id())
-    session_start();
+  if(!headers_sent()){
+    if(!session_id()){
+      session_start();
+    }
+  }
 }
 
 function new_twitter_end_session() {
@@ -163,11 +166,13 @@ function new_twitter_login_action(){
             $ID = wp_create_user($sanitized_user_login, $random_password, $email);
             if(!is_wp_error($ID)){
               wp_new_user_notification($ID, $random_password);
+              $user_info = get_userdata($ID);
               wp_update_user(array(
                 'ID' => $ID, 
                 'display_name' => $resp->name, 
                 'twitter' => $resp->screen_name
               ));
+              update_user_meta( $ID, 'new_twitter_default_password', $user_info->user_pass);
               update_user_meta( $ID, 'twitter_profile_picture', 'https://api.twitter.com/1/users/profile_image?user_id='.$resp->id.'&size=bigger');
               do_action('nextend_twitter_user_registered', $resp, $tmhOAuth);
             }else{
@@ -212,14 +217,39 @@ function new_twitter_login_action(){
         }
         exit;
       }else{
-        if($_SESSION['redirect'] == '' || $_SESSION['redirect'] == new_twitter_login_url())
-          $_SESSION['redirect'] = site_url();
-        $current_user = wp_get_current_user();
-        if($current_user->ID == $ID){ // It was a simple login
-          header( 'Location: '.$_SESSION['redirect'] );
+        if($_SESSION['redirect'] == '' || $_SESSION['redirect'] == new_twitter_login_url()){
+          if(isset($_GET['redirect']) ){
+            $_SESSION['redirect'] = $_GET['redirect'];
+          }else{
+            $_SESSION['redirect'] = site_url();
+          }
+        }
+        if(new_twitter_is_user_connected()){ // It was a simple login
+          if(isset($_GET['action']) && $_GET['action'] == 'unlink'){
+            $user_info = wp_get_current_user();
+            if(get_user_meta( $user_info->ID, 'new_twitter_default_password', true) == $user_info->user_pass){
+              // Unlinking not available
+              $_SESSION['new_twitter_admin_notice'] = __('Your account using the default password, which generated with social register. Please change it and try again!', 'nextend-twitter-connect');
+              header( 'Location: '.$_SESSION['redirect'] );
+              unset($_SESSION['redirect']);
+              exit;
+            }else{
+              $wpdb->query(
+                $wpdb->prepare( 
+                	'DELETE FROM '.$wpdb->prefix.'social_users
+                  WHERE ID = %d
+                  AND type = \'twitter\'', $user_info->ID));
+              header( 'Location: '.$_SESSION['redirect'] );
+              unset($_SESSION['redirect']);
+              exit;        
+            }
+            exit;
+          }
+          header('Location: '.$_SESSION['redirect']);
           unset($_SESSION['redirect']);
           exit;
-        }elseif($ID === NULL){  // Let's connect the accout to the current user!
+        }elseif($ID === NULL){  // Let's connect the account to the current user!
+          $current_user = wp_get_current_user();
           $wpdb->insert( 
           	$wpdb->prefix.'social_users', 
           	array( 
@@ -347,7 +377,7 @@ function new_twitter_request_email(){
 }
 
 /*
-  Is the current user connected the Facebook profile? 
+  Is the current user connected the Twitter profile? 
 */
 function new_twitter_is_user_connected(){
   global $wpdb;
@@ -364,7 +394,6 @@ function new_twitter_is_user_connected(){
 */
 function new_add_twitter_connect_field() {
   global $new_is_social_header;
-  if(new_twitter_is_user_connected()) return;
   
   if($new_is_social_header === NULL){
     ?>
@@ -378,7 +407,13 @@ function new_add_twitter_connect_field() {
       <tr>	
         <th></th>	
         <td>
-          <?php echo new_twitter_link_button() ?>
+          <?php 
+            if(new_twitter_is_user_connected()){
+              echo new_twitter_unlink_button();
+            }else{
+              echo new_twitter_link_button();
+            }
+          ?>
         </td>
       </tr>
     </tbody>
@@ -475,6 +510,11 @@ function new_twitter_sign_button(){
 function new_twitter_link_button(){
   global $new_twitter_settings;
   return '<a href="'.new_twitter_login_url().'&redirect='.new_twitter_curPageURL().'">'.$new_twitter_settings['twitter_link_button'].'</a><br />';
+}
+
+function new_twitter_unlink_button(){
+  global $new_twitter_settings;
+  return '<a href="'.new_twitter_login_url().'&redirect='.new_twitter_curPageURL().'">'.$new_twitter_settings['twitter_unlink_button'].'</a><br />';
 }
 
 function new_twitter_login_url(){
