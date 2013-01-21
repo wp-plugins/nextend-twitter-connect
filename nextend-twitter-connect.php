@@ -3,7 +3,7 @@
 Plugin Name: Nextend Twitter Connect
 Plugin URI: http://nextendweb.com/
 Description: Twitter connect
-Version: 1.4.43
+Version: 1.4.47
 Author: Roland Soos
 License: GPL2
 */
@@ -121,6 +121,20 @@ function new_twitter_login(){
 
 function new_twitter_login_action(){
   global $wp, $wpdb,$new_twitter_settings;
+  
+  if(isset($_GET['action']) && $_GET['action'] == 'unlink'){
+    $user_info = wp_get_current_user();
+    if($user_info->ID){
+      $wpdb->query(
+	$wpdb->prepare( 
+	      'DELETE FROM '.$wpdb->prefix.'social_users
+	WHERE ID = %d
+	AND type = \'twitter\'', $user_info->ID));
+      $_SESSION['new_twitter_admin_notice'] = __('Your Twitter profile is successfully unlinked from your account.', 'nextend-twitter-connect');
+    }
+    new_twitter_redirect();
+  }
+  
   require(dirname(__FILE__).'/sdk/init.php');
   $here = new_twitter_login_url();
   if ( isset($_SESSION['access_token']) ) {
@@ -208,46 +222,10 @@ function new_twitter_login_action(){
           $user_info = get_userdata($ID);
           do_action('wp_login', $user_info->user_login, $user_info);
           do_action('nextend_twitter_user_logged_in', $resp, $tmhOAuth);
-          
-          if($_SESSION['redirect'] == '' || $_SESSION['redirect'] == new_twitter_login_url())
-            $_SESSION['redirect'] = site_url();
-          header( 'Location: '.(isset($_SESSION['redirect']) ? $_SESSION['redirect'] : $_GET['redirect']) );
-          unset($_SESSION['redirect']);
-          exit;
         }
-        exit;
       }else{
-        if($_SESSION['redirect'] == '' || $_SESSION['redirect'] == new_twitter_login_url()){
-          if(isset($_GET['redirect']) ){
-            $_SESSION['redirect'] = $_GET['redirect'];
-          }else{
-            $_SESSION['redirect'] = site_url();
-          }
-        }
-        if(new_twitter_is_user_connected()){ // It was a simple login
-          if(isset($_GET['action']) && $_GET['action'] == 'unlink'){
-            $user_info = wp_get_current_user();
-            if(get_user_meta( $user_info->ID, 'new_twitter_default_password', true) == $user_info->user_pass){
-              // Unlinking not available
-              $_SESSION['new_twitter_admin_notice'] = __('Your account using the default password, which generated with social register. Please change it and try again!', 'nextend-twitter-connect');
-              header( 'Location: '.$_SESSION['redirect'] );
-              unset($_SESSION['redirect']);
-              exit;
-            }else{
-              $wpdb->query(
-                $wpdb->prepare( 
-                	'DELETE FROM '.$wpdb->prefix.'social_users
-                  WHERE ID = %d
-                  AND type = \'twitter\'', $user_info->ID));
-              header( 'Location: '.$_SESSION['redirect'] );
-              unset($_SESSION['redirect']);
-              exit;        
-            }
-            exit;
-          }
-          header('Location: '.$_SESSION['redirect']);
-          unset($_SESSION['redirect']);
-          exit;
+        if(new_twitter_is_user_connected()){
+	  // It was a simple login
         }elseif($ID === NULL){  // Let's connect the account to the current user!
           $current_user = wp_get_current_user();
           $wpdb->insert( 
@@ -265,16 +243,11 @@ function new_twitter_login_action(){
           );
           do_action('nextend_twitter_user_account_linked', $resp, $tmhOAuth);
           $_SESSION['new_twitter_admin_notice'] = __('Your Twitter profile is successfully linked with your account. Now you can sign in with Twitter easily.', 'nextend-twitter-connect');
-          header( 'Location: '.(isset($_SESSION['redirect']) ? $_SESSION['redirect'] : $_GET['redirect']) );
-          unset($_SESSION['redirect']);
-          exit;
         }else{
           $_SESSION['new_twitter_admin_notice'] = __('This Twitter profile is already linked with other account. Linking process failed!', 'nextend-twitter-connect');
-          header( 'Location: '.(isset($_SESSION['redirect']) ? $_SESSION['redirect'] : $_GET['redirect']) );
-          unset($_SESSION['redirect']);
-          exit;
         }
       }
+      new_twitter_redirect();
     } else {
       //print_r($tmhOAuth);
       echo "Twitter Error 3";
@@ -308,7 +281,12 @@ function new_twitter_login_action(){
     if(isset($new_twitter_settings['twitter_redirect']) && $new_twitter_settings['twitter_redirect'] != '' && $new_twitter_settings['twitter_redirect'] != 'auto'){
       $_GET['redirect'] = $new_twitter_settings['twitter_redirect'];
     }
-    $_SESSION['redirect'] = isset($_GET['redirect']) ? $_GET['redirect'] : site_url();
+    if(isset($_GET['redirect']) ){
+      $_SESSION['redirect'] = $_GET['redirect'];
+    }
+    if($_SESSION['redirect'] == '' || $_SESSION['redirect'] == new_twitter_login_url()){
+      $_SESSION['redirect'] = site_url();
+    }
     
     $callback = $here;
     $params = array(
@@ -514,7 +492,7 @@ function new_twitter_link_button(){
 
 function new_twitter_unlink_button(){
   global $new_twitter_settings;
-  return '<a href="'.new_twitter_login_url().'&redirect='.new_twitter_curPageURL().'">'.$new_twitter_settings['twitter_unlink_button'].'</a><br />';
+  return '<a href="'.new_twitter_login_url().'&action=unlink&redirect='.new_twitter_curPageURL().'">'.$new_twitter_settings['twitter_unlink_button'].'</a><br />';
 }
 
 function new_twitter_login_url(){
@@ -531,6 +509,19 @@ function new_twitter_curPageURL() {
     $pageURL .= $_SERVER["SERVER_NAME"].$_SERVER["REQUEST_URI"];
   }
   return $pageURL;
+}
+
+function new_twitter_redirect(){
+  if(!isset($_SESSION['redirect']) || $_SESSION['redirect'] == '' || $_SESSION['redirect'] == new_twitter_login_url()){
+    if(isset($_GET['redirect']) ){
+      $_SESSION['redirect'] = $_GET['redirect'];
+    }else{
+      $_SESSION['redirect'] = site_url();
+    }
+  }
+  header('LOCATION: '.$_SESSION['redirect']);
+  unset($_SESSION['redirect']);
+  exit;
 }
 
 function new_twitter_edit_profile_redirect(){
