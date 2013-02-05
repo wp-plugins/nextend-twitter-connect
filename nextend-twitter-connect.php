@@ -4,7 +4,7 @@
 Plugin Name: Nextend Twitter Connect
 Plugin URI: http://nextendweb.com/
 Description: Twitter connect
-Version: 1.4.49
+Version: 1.4.52
 Author: Roland Soos
 License: GPL2
 */
@@ -439,7 +439,7 @@ function new_twitter_insert_avatar($avatar = '', $id_or_email, $size = 96, $defa
   if ($id == 0) return $avatar;
   $pic = get_user_meta($id, 'twitter_profile_picture', true);
   if (!$pic || $pic == '') return $avatar;
-  $avatar = preg_replace('/src=("|\').*?("|\')/i', 'src="' . $pic . '"', $avatar);
+  $avatar = preg_replace('/src=("|\').*?("|\')/i', 'src=\'' . $pic . '\'', $avatar);
   return $avatar;
 }
 
