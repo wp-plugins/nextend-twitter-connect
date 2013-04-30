@@ -4,7 +4,7 @@
 Plugin Name: Nextend Twitter Connect
 Plugin URI: http://nextendweb.com/
 Description: Twitter connect
-Version: 1.4.52
+Version: 1.4.55
 Author: Roland Soos
 License: GPL2
 */
@@ -28,26 +28,20 @@ define('NEW_TWITTER_LOGIN', 1);
 if (!defined('NEW_TWITTER_LOGIN_PLUGIN_BASENAME')) define('NEW_TWITTER_LOGIN_PLUGIN_BASENAME', plugin_basename(__FILE__));
 $new_twitter_settings = maybe_unserialize(get_option('nextend_twitter_connect'));
 
-/*
-Sessions required for the profile notices
-*/
-
-function new_twitter_start_session() {
-
-  if (!headers_sent()) {
-    if (!session_id()) {
-      session_start();
+if(!function_exists('nextend_uniqid')){
+    function nextend_uniqid(){
+        if(isset($_COOKIE['nextend_uniqid'])){
+            if(get_site_transient('n_'.$_COOKIE['nextend_uniqid']) !== false){
+                return $_COOKIE['nextend_uniqid'];
+            }
+        }
+        $_COOKIE['nextend_uniqid'] = uniqid('nextend', true);
+        setcookie('nextend_uniqid', $_COOKIE['nextend_uniqid'], time() + 3600, '/');
+        set_site_transient('n_'.$_COOKIE['nextend_uniqid'], 1, 3600);
+        
+        return $_COOKIE['nextend_uniqid'];
     }
-  }
 }
-
-function new_twitter_end_session() {
-
-  if (session_id()) session_destroy();
-}
-add_action('init', 'new_twitter_start_session', 1);
-add_action('wp_logout', 'new_twitter_end_session');
-add_action('wp_login', 'new_twitter_end_session');
 
 /*
 Loading style for buttons
@@ -133,15 +127,19 @@ function new_twitter_login_action() {
       $wpdb->query($wpdb->prepare('DELETE FROM ' . $wpdb->prefix . 'social_users
         WHERE ID = %d
         AND type = \'twitter\'', $user_info->ID));
-      $_SESSION['new_twitter_admin_notice'] = __('Your Twitter profile is successfully unlinked from your account.', 'nextend-twitter-connect');
+      set_site_transient($user_info->ID.'_new_twitter_admin_notice', __('Your Twitter profile is successfully unlinked from your account.', 'nextend-twitter-connect'), 3600);
     }
     new_twitter_redirect();
   }
   require (dirname(__FILE__) . '/sdk/init.php');
   $here = new_twitter_login_url();
-  if (isset($_SESSION['access_token'])) {
-    $tmhOAuth->config['user_token'] = $_SESSION['access_token']['oauth_token'];
-    $tmhOAuth->config['user_secret'] = $_SESSION['access_token']['oauth_token_secret'];
+  $access_token = get_site_transient( nextend_uniqid().'_twitter_at');
+  
+  $oauth = get_site_transient( nextend_uniqid().'_twitter_o');
+  
+  if ($access_token !== false) {
+    $tmhOAuth->config['user_token'] = $access_token['oauth_token'];
+    $tmhOAuth->config['user_secret'] = $access_token['oauth_token_secret'];
     $code = $tmhOAuth->request('GET', $tmhOAuth->url('1/account/verify_credentials'));
     if ($code == 401) {
       $code = tmhUtilities::auto_fix_time_request($tmhOAuth, 'GET', $tmhOAuth->url('1/account/verify_credentials'));
@@ -202,7 +200,7 @@ function new_twitter_login_action() {
             ));
           }
           if (isset($new_twitter_settings['twitter_redirect_reg']) && $new_twitter_settings['twitter_redirect_reg'] != '' && $new_twitter_settings['twitter_redirect_reg'] != 'auto') {
-            $_SESSION['redirect'] = $new_twitter_settings['twitter_redirect_reg'];
+            set_site_transient( nextend_uniqid().'_twitter_r', $new_twitter_settings['twitter_redirect_reg'], 3600);
           }
         }
         if ($ID) { // Login
@@ -236,9 +234,11 @@ function new_twitter_login_action() {
             '%s'
           ));
           do_action('nextend_twitter_user_account_linked', $ID, $resp, $tmhOAuth);
-          $_SESSION['new_twitter_admin_notice'] = __('Your Twitter profile is successfully linked with your account. Now you can sign in with Twitter easily.', 'nextend-twitter-connect');
+          $user_info = wp_get_current_user();
+          set_site_transient($user_info->ID.'_new_twitter_admin_notice', __('Your Twitter profile is successfully linked with your account. Now you can sign in with Twitter easily.', 'nextend-twitter-connect'), 3600);
         } else {
-          $_SESSION['new_twitter_admin_notice'] = __('This Twitter profile is already linked with other account. Linking process failed!', 'nextend-twitter-connect');
+          $user_info = wp_get_current_user();
+          set_site_transient($user_info->ID.'_new_twitter_admin_notice', __('This Twitter profile is already linked with other account. Linking process failed!', 'nextend-twitter-connect'), 3600);
         }
       }
       new_twitter_redirect();
@@ -251,9 +251,9 @@ function new_twitter_login_action() {
 
     // we're being called back by Twitter
     
-  } elseif (isset($_REQUEST['oauth_verifier'])) {
-    $tmhOAuth->config['user_token'] = $_SESSION['oauth']['oauth_token'];
-    $tmhOAuth->config['user_secret'] = $_SESSION['oauth']['oauth_token_secret'];
+  } elseif ($oauth !== false && isset($_REQUEST['oauth_verifier'])) {
+    $tmhOAuth->config['user_token'] = $oauth['oauth_token'];
+    $tmhOAuth->config['user_secret'] = $oauth['oauth_token_secret'];
     $params = array(
       'oauth_verifier' => $_REQUEST['oauth_verifier']
     );
@@ -262,9 +262,11 @@ function new_twitter_login_action() {
       $code = tmhUtilities::auto_fix_time_request($tmhOAuth, 'POST', $tmhOAuth->url('oauth/access_token', '') , $params);
     }
     if ($code == 200) {
-      $_SESSION['access_token'] = $tmhOAuth->extract_params($tmhOAuth->response['response']);
-      unset($_SESSION['oauth']);
-      header("Location: {$here}");
+      $access_token = $tmhOAuth->extract_params($tmhOAuth->response['response']);
+      set_site_transient( nextend_uniqid().'_twitter_at', $access_token, 3600);
+      delete_site_transient(nextend_uniqid().'_twitter_o');
+      header("Location: ".$here);
+      exit;
     } else {
       echo "Twitter Error 2";
       exit;
@@ -277,10 +279,12 @@ function new_twitter_login_action() {
       $_GET['redirect'] = $new_twitter_settings['twitter_redirect'];
     }
     if (isset($_GET['redirect'])) {
-      $_SESSION['redirect'] = $_GET['redirect'];
+      set_site_transient( nextend_uniqid().'_twitter_r', $_GET['redirect'], 3600);
     }
-    if ($_SESSION['redirect'] == '' || $_SESSION['redirect'] == new_twitter_login_url()) {
-      $_SESSION['redirect'] = site_url();
+    $redirect = get_site_transient( nextend_uniqid().'_twitter_r');
+    if ($redirect == '' || $redirect == new_twitter_login_url()) {
+      $redirect = site_url();
+      set_site_transient( nextend_uniqid().'_twitter_r', $redirect, 3600);
     }
     $callback = $here;
     $params = array(
@@ -294,10 +298,11 @@ function new_twitter_login_action() {
       $code = tmhUtilities::auto_fix_time_request($tmhOAuth, 'POST', $tmhOAuth->url('oauth/request_token', '') , $params);
     }
     if ($code == 200) {
-      $_SESSION['oauth'] = $tmhOAuth->extract_params($tmhOAuth->response['response']);
+      $oauth = $tmhOAuth->extract_params($tmhOAuth->response['response']);
+      set_site_transient( nextend_uniqid().'_twitter_o', $oauth, 3600);
       $method = 'authenticate';
       $force = isset($_REQUEST['force']) ? '&force_login=1' : '';
-      $authurl = $tmhOAuth->url("oauth/{$method}", '') . "?oauth_token={$_SESSION['oauth']['oauth_token']}{$force}";
+      $authurl = $tmhOAuth->url("oauth/{$method}", '') . "?oauth_token={$oauth['oauth_token']}{$force}";
       header('Location: ' . $authurl);
       exit;
     } else {
@@ -314,7 +319,6 @@ This function request valid email from Twitter users
 */
 
 function new_twitter_request_email() {
-
   $user_email = $_POST['user_email'];
   $errors = new WP_Error();
   if (isset($_POST['user_email']) && $user_email == '') {
@@ -328,6 +332,7 @@ function new_twitter_request_email() {
   if (isset($_POST['user_email']) && $errors->get_error_code() == '') {
     return $user_email;
   }
+
   login_header(__('Registration Form') , '<p class="message register">' . __('Please enter your email address to register!') . '</p>', $errors);
 ?>
   <form name="registerform" id="registerform" action="<?php echo esc_url(site_url('wp-login.php?loginTwitter=1', 'login_post')); ?>" method="post">
@@ -508,16 +513,18 @@ function new_twitter_curPageURL() {
 }
 
 function new_twitter_redirect() {
+  
+  $redirect = get_site_transient( nextend_uniqid().'_twitter_r');
 
-  if (!isset($_SESSION['redirect']) || $_SESSION['redirect'] == '' || $_SESSION['redirect'] == new_twitter_login_url()) {
+  if ($redirect || $redirect == '' || $redirect == new_twitter_login_url()) {
     if (isset($_GET['redirect'])) {
-      $_SESSION['redirect'] = $_GET['redirect'];
+      $redirect = $_GET['redirect'];
     } else {
-      $_SESSION['redirect'] = site_url();
+      $redirect = site_url();
     }
   }
-  header('LOCATION: ' . $_SESSION['redirect']);
-  unset($_SESSION['redirect']);
+  header('LOCATION: ' . $redirect);
+  delete_site_transient( nextend_uniqid().'_twitter_r');
   exit;
 }
 
@@ -548,11 +555,157 @@ Session notices used in the profile settings
 
 function new_twitter_admin_notice() {
 
-  if (isset($_SESSION['new_twitter_admin_notice'])) {
+  $user_info = wp_get_current_user();
+  $notice = get_site_transient($user_info->ID.'_new_twitter_admin_notice');
+  if ($notice !== false) {
     echo '<div class="updated">
-       <p>' . $_SESSION['new_twitter_admin_notice'] . '</p>
+       <p>' . $notice . '</p>
     </div>';
-    unset($_SESSION['new_twitter_admin_notice']);
+    delete_site_transient($user_info->ID.'_new_twitter_admin_notice');
   }
 }
 add_action('admin_notices', 'new_twitter_admin_notice');
+
+
+
+/*
+  Core functions, which should be included when wp-login.php is NOT used...
+*/
+if(!function_exists('login_header')){
+    /**
+     * Outputs the header for the login page.
+     *
+     * @uses do_action() Calls the 'login_head' for outputting HTML in the Log In
+     *		header.
+     * @uses apply_filters() Calls 'login_headerurl' for the top login link.
+     * @uses apply_filters() Calls 'login_headertitle' for the top login title.
+     * @uses apply_filters() Calls 'login_message' on the message to display in the
+     *		header.
+     * @uses $error The error global, which is checked for displaying errors.
+     *
+     * @param string $title Optional. WordPress Log In Page title to display in
+     *		<title/> element.
+     * @param string $message Optional. Message to display in header.
+     * @param WP_Error $wp_error Optional. WordPress Error Object
+     */
+    function login_header($title = 'Log In', $message = '', $wp_error = '') {
+    	global $error, $interim_login, $current_site, $action;
+    
+    	// Don't index any of these forms
+    	add_action( 'login_head', 'wp_no_robots' );
+    
+    	if ( empty($wp_error) )
+    		$wp_error = new WP_Error();
+    
+    	// Shake it!
+    	$shake_error_codes = array( 'empty_password', 'empty_email', 'invalid_email', 'invalidcombo', 'empty_username', 'invalid_username', 'incorrect_password' );
+    	$shake_error_codes = apply_filters( 'shake_error_codes', $shake_error_codes );
+    
+    	if ( $shake_error_codes && $wp_error->get_error_code() && in_array( $wp_error->get_error_code(), $shake_error_codes ) )
+    		add_action( 'login_head', 'wp_shake_js', 12 );
+    
+    	?><!DOCTYPE html>
+    	<html xmlns="http://www.w3.org/1999/xhtml" <?php language_attributes(); ?>>
+    	<head>
+    	<meta http-equiv="Content-Type" content="<?php bloginfo('html_type'); ?>; charset=<?php bloginfo('charset'); ?>" />
+    	<title><?php bloginfo('name'); ?> &rsaquo; <?php echo $title; ?></title>
+    	<?php
+    
+    	wp_admin_css( 'wp-admin', true );
+    	wp_admin_css( 'colors-fresh', true );
+    
+    	if ( wp_is_mobile() ) { ?>
+    		<meta name="viewport" content="width=320; initial-scale=0.9; maximum-scale=1.0; user-scalable=0;" /><?php
+    	}
+    
+    	do_action( 'login_enqueue_scripts' );
+    	do_action( 'login_head' );
+    
+    	if ( is_multisite() ) {
+    		$login_header_url   = network_home_url();
+    		$login_header_title = $current_site->site_name;
+    	} else {
+    		$login_header_url   = __( 'http://wordpress.org/' );
+    		$login_header_title = __( 'Powered by WordPress' );
+    	}
+    
+    	$login_header_url   = apply_filters( 'login_headerurl',   $login_header_url   );
+    	$login_header_title = apply_filters( 'login_headertitle', $login_header_title );
+    
+    	// Don't allow interim logins to navigate away from the page.
+    	if ( $interim_login )
+    		$login_header_url = '#';
+    
+    	$classes = array( 'login-action-' . $action, 'wp-core-ui' );
+    	if ( wp_is_mobile() )
+    		$classes[] = 'mobile';
+    	if ( is_rtl() )
+    		$classes[] = 'rtl';
+    	$classes = apply_filters( 'login_body_class', $classes, $action );
+    	?>
+    	</head>
+    	<body class="login <?php echo esc_attr( implode( ' ', $classes ) ); ?>">
+    	<div id="login">
+    		<h1><a href="<?php echo esc_url( $login_header_url ); ?>" title="<?php echo esc_attr( $login_header_title ); ?>"><?php bloginfo( 'name' ); ?></a></h1>
+    	<?php
+    
+    	unset( $login_header_url, $login_header_title );
+    
+    	$message = apply_filters('login_message', $message);
+    	if ( !empty( $message ) )
+    		echo $message . "\n";
+    
+    	// In case a plugin uses $error rather than the $wp_errors object
+    	if ( !empty( $error ) ) {
+    		$wp_error->add('error', $error);
+    		unset($error);
+    	}
+    
+    	if ( $wp_error->get_error_code() ) {
+    		$errors = '';
+    		$messages = '';
+    		foreach ( $wp_error->get_error_codes() as $code ) {
+    			$severity = $wp_error->get_error_data($code);
+    			foreach ( $wp_error->get_error_messages($code) as $error ) {
+    				if ( 'message' == $severity )
+    					$messages .= '	' . $error . "<br />\n";
+    				else
+    					$errors .= '	' . $error . "<br />\n";
+    			}
+    		}
+    		if ( !empty($errors) )
+    			echo '<div id="login_error">' . apply_filters('login_errors', $errors) . "</div>\n";
+    		if ( !empty($messages) )
+    			echo '<p class="message">' . apply_filters('login_messages', $messages) . "</p>\n";
+    	}
+    } // End of login_header()
+    
+    /**
+     * Outputs the footer for the login page.
+     *
+     * @param string $input_id Which input to auto-focus
+     */
+    function login_footer($input_id = '') {
+    	global $interim_login;
+    
+    	// Don't allow interim logins to navigate away from the page.
+    	if ( ! $interim_login ): ?>
+    	<p id="backtoblog"><a href="<?php echo esc_url( home_url( '/' ) ); ?>" title="<?php esc_attr_e( 'Are you lost?' ); ?>"><?php printf( __( '&larr; Back to %s' ), get_bloginfo( 'title', 'display' ) ); ?></a></p>
+    	<?php endif; ?>
+    
+    	</div>
+    
+    	<?php if ( !empty($input_id) ) : ?>
+    	<script type="text/javascript">
+    	try{document.getElementById('<?php echo $input_id; ?>').focus();}catch(e){}
+    	if(typeof wpOnload=='function')wpOnload();
+    	</script>
+    	<?php endif; ?>
+    
+    	<?php do_action('login_footer'); ?>
+    	<div class="clear"></div>
+    	</body>
+    	</html>
+    	<?php
+    }
+}
