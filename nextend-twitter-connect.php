@@ -4,7 +4,7 @@
 Plugin Name: Nextend Twitter Connect
 Plugin URI: http://nextendweb.com/
 Description: Twitter connect
-Version: 1.4.57
+Version: 1.4.58
 Author: Roland Soos
 License: GPL2
 */
@@ -319,18 +319,21 @@ This function request valid email from Twitter users
 */
 
 function new_twitter_request_email() {
-  $user_email = $_POST['user_email'];
+  $user_email = '';
   $errors = new WP_Error();
-  if (isset($_POST['user_email']) && $user_email == '') {
-    $errors->add('empty_email', __('<strong>ERROR</strong>: Please type your e-mail address.'));
-  } elseif (!is_email($user_email)) {
-    $errors->add('invalid_email', __('<strong>ERROR</strong>: The email address isn&#8217;t correct.'));
-    $user_email = '';
-  } elseif (email_exists($user_email)) {
-    $errors->add('email_exists', __('<strong>ERROR</strong>: This email is already registered, please choose another one.'));
-  }
-  if (isset($_POST['user_email']) && $errors->get_error_code() == '') {
-    return $user_email;
+  if(isset($_POST['user_email'])){
+      $user_email = $_POST['user_email'];
+      if ($user_email == '') {
+        $errors->add('empty_email', __('<strong>ERROR</strong>: Please type your e-mail address.'));
+      } elseif (!is_email($user_email)) {
+        $errors->add('invalid_email', __('<strong>ERROR</strong>: The email address isn&#8217;t correct.'));
+        $user_email = '';
+      } elseif (email_exists($user_email)) {
+        $errors->add('email_exists', __('<strong>ERROR</strong>: This email is already registered, please choose another one.'));
+      }
+      if (isset($_POST['user_email']) && $errors->get_error_code() == '') {
+        return $user_email;
+      }
   }
 
   login_header(__('Registration Form') , '<p class="message register">' . __('Please enter your email address to register!') . '</p>', $errors);
