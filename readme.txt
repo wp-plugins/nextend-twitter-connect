@@ -65,7 +65,7 @@ After you activated the plugin, the plugin will autmatically
 
 == Changelog ==
 
-= 1.4.57 =
+= 1.4.58 =
 * Asking for email error message imrpovement
 
 = 1.4.57 =
