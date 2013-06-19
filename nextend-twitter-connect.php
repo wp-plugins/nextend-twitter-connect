@@ -4,7 +4,7 @@
 Plugin Name: Nextend Twitter Connect
 Plugin URI: http://nextendweb.com/
 Description: Twitter connect
-Version: 1.4.58
+Version: 1.4.59
 Author: Roland Soos
 License: GPL2
 */
@@ -140,9 +140,9 @@ function new_twitter_login_action() {
   if ($access_token !== false) {
     $tmhOAuth->config['user_token'] = $access_token['oauth_token'];
     $tmhOAuth->config['user_secret'] = $access_token['oauth_token_secret'];
-    $code = $tmhOAuth->request('GET', $tmhOAuth->url('1/account/verify_credentials'));
+    $code = $tmhOAuth->request('GET', $tmhOAuth->url('1.1/account/verify_credentials'));
     if ($code == 401) {
-      $code = tmhUtilities::auto_fix_time_request($tmhOAuth, 'GET', $tmhOAuth->url('1/account/verify_credentials'));
+      $code = tmhUtilities::auto_fix_time_request($tmhOAuth, 'GET', $tmhOAuth->url('1.1/account/verify_credentials'));
     }
     if ($code == 200) {
       $resp = json_decode($tmhOAuth->response['response']);
@@ -213,7 +213,7 @@ function new_twitter_login_action() {
           wp_set_auth_cookie($ID, true, $secure_cookie);
           $user_info = get_userdata($ID);
           do_action('wp_login', $user_info->user_login, $user_info);
-          update_user_meta($ID, 'twitter_profile_picture', 'https://api.twitter.com/1/users/profile_image?user_id=' . $resp->id . '&size=bigger');
+          update_user_meta($ID, 'twitter_profile_picture', 'https://api.twitter.com/1.1/users/profile_image?user_id=' . $resp->id . '&size=bigger');
           do_action('nextend_twitter_user_logged_in', $ID, $resp, $tmhOAuth);
         }
       } else {
@@ -244,7 +244,6 @@ function new_twitter_login_action() {
       new_twitter_redirect();
     } else {
 
-      //print_r($tmhOAuth);
       echo "Twitter Error 3";
       exit;
     }
