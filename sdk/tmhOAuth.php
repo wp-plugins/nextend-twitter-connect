@@ -64,8 +64,8 @@ class tmhOAuth {
         // you can get the latest cacert.pem from here http://curl.haxx.se/ca/cacert.pem
         // if you're getting HTTP 0 responses, check cacert.pem exists and is readable
         // without it curl won't be able to create an SSL connection
-        'curl_cainfo'                => __DIR__ . DIRECTORY_SEPARATOR . 'cacert.pem',
-        'curl_capath'                => __DIR__,
+        'curl_cainfo'                => dirname(__FILE__) . DIRECTORY_SEPARATOR . 'cacert.pem',
+        'curl_capath'                => dirname(__FILE__),
 
         'curl_followlocation'        => false, // whether to follow redirects or not
 

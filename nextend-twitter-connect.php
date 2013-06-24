@@ -4,7 +4,7 @@
 Plugin Name: Nextend Twitter Connect
 Plugin URI: http://nextendweb.com/
 Description: Twitter connect
-Version: 1.4.59
+Version: 1.4.60
 Author: Roland Soos
 License: GPL2
 */
