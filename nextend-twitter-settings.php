@@ -10,6 +10,14 @@ if(isset($_POST['newtwitter_update_options'])) {
     foreach($_POST AS $k => $v){
       $_POST[$k] = stripslashes($v);
     }
+    unset($_POST['Submit']);
+    $sanitize = array('newtwitter_update_options', 'twitter_consumer_key', 'twitter_consumer_secret', 'twitter_redirect', 'twitter_redirect_reg', 'twitter_load_style');
+    foreach($sanitize AS $k){
+        $_POST[$k] =  sanitize_text_field($_POST[$k]);
+    }
+    
+    $_POST['twitter_user_prefix'] = preg_replace("/[^A-Za-z0-9\-_ ]/", '', $_POST['twitter_user_prefix']);
+    
 		update_option("nextend_twitter_connect", maybe_serialize($_POST));
 		$newtwitter_status = 'update_success';
 	}
@@ -109,14 +117,14 @@ function NextendTwitter_Options_Page() {
 		<tr>
 		<th scope="row"><?php _e('Twitter Consumer key:', 'nextend-twitter-connect'); ?></th>
 		<td>
-		<input type="text" name="twitter_consumer_key" value="<?php echo $nextend_twitter_connect['twitter_consumer_key']; ?>" />
+		<input type="text" name="twitter_consumer_key" value="<?php echo esc_html($nextend_twitter_connect['twitter_consumer_key']); ?>" />
 		</td>
 		</tr>
 
 		<tr>
 		<th scope="row"><?php _e('Twitter Consumer secret:', 'nextend-twitter-connect'); ?></th>
 		<td>
-		<input type="text" name="twitter_consumer_secret" value="<?php echo $nextend_twitter_connect['twitter_consumer_secret']; ?>" />
+		<input type="text" name="twitter_consumer_secret" value="<?php echo esc_html($nextend_twitter_connect['twitter_consumer_secret']); ?>" />
 		</td>
 		</tr>
 
@@ -124,7 +132,7 @@ function NextendTwitter_Options_Page() {
 		<th scope="row"><?php _e('New user prefix:', 'nextend-twitter-connect'); ?></th>
 		<td>
     <?php if(!isset($nextend_twitter_connect['twitter_user_prefix'])) $nextend_twitter_connect['twitter_user_prefix'] = 'twitter - '; ?>
-		<input type="text" name="twitter_user_prefix" value="<?php echo $nextend_twitter_connect['twitter_user_prefix']; ?>" />
+		<input type="text" name="twitter_user_prefix" value="<?php echo esc_html($nextend_twitter_connect['twitter_user_prefix']); ?>" />
 		</td>
 		</tr>
 
@@ -132,7 +140,7 @@ function NextendTwitter_Options_Page() {
 		<th scope="row"><?php _e('Fixed redirect url for login:', 'nextend-twitter-connect'); ?></th>
 		<td>
     <?php if(!isset($nextend_twitter_connect['twitter_redirect'])) $nextend_twitter_connect['twitter_redirect'] = 'auto'; ?>
-		<input type="text" name="twitter_redirect" value="<?php echo $nextend_twitter_connect['twitter_redirect']; ?>" />
+		<input type="text" name="twitter_redirect" value="<?php echo esc_html($nextend_twitter_connect['twitter_redirect']); ?>" />
 		</td>
 		</tr>
 
@@ -140,7 +148,7 @@ function NextendTwitter_Options_Page() {
 		<th scope="row"><?php _e('Fixed redirect url for register:', 'nextend-twitter-connect'); ?></th>
 		<td>
     <?php if(!isset($nextend_twitter_connect['twitter_redirect_reg'])) $nextend_twitter_connect['twitter_redirect_reg'] = 'auto'; ?>
-		<input type="text" name="twitter_redirect_reg" value="<?php echo $nextend_twitter_connect['twitter_redirect_reg']; ?>" />
+		<input type="text" name="twitter_redirect_reg" value="<?php echo esc_html($nextend_twitter_connect['twitter_redirect_reg']); ?>" />
 		</td>
 		</tr>
 
@@ -157,7 +165,7 @@ function NextendTwitter_Options_Page() {
 		<th scope="row"><?php _e('Login button:', 'nextend-twitter-connect'); ?></th>
 		<td>
       <?php if(!isset($nextend_twitter_connect['twitter_login_button'])) $nextend_twitter_connect['twitter_login_button'] = '<div class="new-twitter-btn new-twitter-1 new-twitter-default-anim"><div class="new-twitter-1-1"><div class="new-twitter-1-1-1">CONNECT WITH</div></div></div>'; ?>
-		  <textarea cols="83" rows="3" name="twitter_login_button"><?php echo $nextend_twitter_connect['twitter_login_button']; ?></textarea>
+		  <textarea cols="83" rows="3" name="twitter_login_button"><?php echo esc_html($nextend_twitter_connect['twitter_login_button']); ?></textarea>
 		</td>
 		</tr>
     
@@ -165,7 +173,7 @@ function NextendTwitter_Options_Page() {
 		<th scope="row"><?php _e('Link account button:', 'nextend-twitter-connect'); ?></th>
 		<td>
       <?php if(!isset($nextend_twitter_connect['twitter_link_button'])) $nextend_twitter_connect['twitter_link_button'] = '<div class="new-twitter-btn new-twitter-1 new-twitter-default-anim"><div class="new-twitter-1-1"><div class="new-twitter-1-1-1">LINK ACCOUNT TO</div></div></div>'; ?>
-		  <textarea cols="83" rows="3" name="twitter_link_button"><?php echo $nextend_twitter_connect['twitter_link_button']; ?></textarea>
+		  <textarea cols="83" rows="3" name="twitter_link_button"><?php echo esc_html($nextend_twitter_connect['twitter_link_button']); ?></textarea>
 		</td>
 		</tr>
     
@@ -173,7 +181,7 @@ function NextendTwitter_Options_Page() {
 		<th scope="row"><?php _e('Unlink account button:', 'nextend-twitter-connect'); ?></th>
 		<td>
       <?php if(!isset($nextend_twitter_connect['twitter_unlink_button'])) $nextend_twitter_connect['twitter_unlink_button'] = '<div class="new-twitter-btn new-twitter-1 new-twitter-default-anim"><div class="new-twitter-1-1"><div class="new-twitter-1-1-1">UNLINK ACCOUNT</div></div></div>'; ?>
-		  <textarea cols="83" rows="3" name="twitter_unlink_button"><?php echo $nextend_twitter_connect['twitter_unlink_button']; ?></textarea>
+		  <textarea cols="83" rows="3" name="twitter_unlink_button"><?php echo esc_html($nextend_twitter_connect['twitter_unlink_button']); ?></textarea>
 		</td>
 		</tr>
     
