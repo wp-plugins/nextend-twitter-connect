@@ -4,7 +4,7 @@
 Plugin Name: Nextend Twitter Connect
 Plugin URI: http://nextendweb.com/
 Description: Twitter connect
-Version: 1.5.1
+Version: 1.5.2
 Author: Roland Soos
 License: GPL2
 */
@@ -477,7 +477,7 @@ add_filter('plugin_action_links', 'new_twitter_plugin_action_links', 10, 2);
 function new_twitter_plugin_action_links($links, $file) {
 
   if ($file != NEW_TWITTER_LOGIN_PLUGIN_BASENAME) return $links;
-  $settings_link = '<a href="' . menu_page_url('nextend-twitter-connect', false) . '">' . esc_html(__('Settings', 'nextend-twitter-connect')) . '</a>';
+  $settings_link = '<a href="' . esc_url(menu_page_url('nextend-twitter-connect', false)) . '">' . esc_html(__('Settings', 'nextend-twitter-connect')) . '</a>';
   array_unshift($links, $settings_link);
   return $links;
 }
@@ -489,19 +489,19 @@ Miscellaneous functions
 function new_twitter_sign_button() {
 
   global $new_twitter_settings;
-  return '<a href="' . new_twitter_login_url() . (isset($_GET['redirect_to']) ? '&redirect=' . $_GET['redirect_to'] : '') . '" rel="nofollow">' . $new_twitter_settings['twitter_login_button'] . '</a><br />';
+  return '<a href="' . esc_url(new_twitter_login_url() . (isset($_GET['redirect_to']) ? '&redirect=' . $_GET['redirect_to'] : '')) . '" rel="nofollow">' . $new_twitter_settings['twitter_login_button'] . '</a><br />';
 }
 
 function new_twitter_link_button() {
 
   global $new_twitter_settings;
-  return '<a href="' . new_twitter_login_url() . '&redirect=' . new_twitter_curPageURL() . '">' . $new_twitter_settings['twitter_link_button'] . '</a><br />';
+  return '<a href="' . esc_url(new_twitter_login_url() . '&redirect=' . new_twitter_curPageURL()) . '">' . $new_twitter_settings['twitter_link_button'] . '</a><br />';
 }
 
 function new_twitter_unlink_button() {
 
   global $new_twitter_settings;
-  return '<a href="' . new_twitter_login_url() . '&action=unlink&redirect=' . new_twitter_curPageURL() . '">' . $new_twitter_settings['twitter_unlink_button'] . '</a><br />';
+  return '<a href="' . esc_url(new_twitter_login_url() . '&action=unlink&redirect=' . new_twitter_curPageURL()) . '">' . $new_twitter_settings['twitter_unlink_button'] . '</a><br />';
 }
 
 function new_twitter_login_url() {
